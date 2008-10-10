@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="urn:mozilla:install-manifest"
+                   em:id="rulerbar@piro.sakura.ne.jp"
+                   em:name="Ruler Bar"
+                   em:version="0.1.2008101001"
+                   em:description="Shows a ruler in the mail composition window."
+                   em:creator="SHIMODA Hiroshi"
+                   em:optionsURL="chrome://rulerbar/content/config.xul"
+                   em:homepageURL="http://piro.sakura.ne.jp/xul/rulerbar/">
+<!--
+                   em:iconURL="chrome://rulerbar/content/icon.png"
+-->
+
+    <em:updateURL>http://piro.sakura.ne.jp/xul/update.rdf</em:updateURL>
+    <em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDLI43lgUhWE0E7bfiuTrQMKIP53KM3w71VEPc9FxE7YS3Hpr85dC/GgEUDPd6xD7UP7ckzEusN49LCAKoipepxgyAWzQjZ3CzvkD7PWsZFTi7lpj9ytYDysoFwHs0L96i5oiVopNj1NQM2AC0Y5Lr0b6lz2L5ece0/z6monpZXPQIDAQAB</em:updateKey>
+
+
+    <em:localized>
+      <RDF:Description em:locale="en-US"
+                       em:name="Ruler Bar"
+                       em:description="Shows a ruler in the mail composition window."
+                       em:homepageURL="http://piro.sakura.ne.jp/xul/_rulerbar.html.en"
+                       em:creator="SHIMODA Hiroshi"/>
+    </em:localized>
+    <em:localized>
+      <RDF:Description em:locale="ja-JP"
+                       em:name="ルーラバー (Ruler Bar)"
+                       em:description="メール作成ウィンドウにルーラを表示します。"
+                       em:homepageURL="http://piro.sakura.ne.jp/xul/_rulerbar.html"
+                       em:creator="SHIMODA Hiroshi"/>
+    </em:localized>
+
+
+    <em:targetApplication>
+      <!-- Thunderbird -->
+	  <RDF:Description em:id="{3550f703-e582-4d05-9a08-453d09bdfdc6}"
+	                   em:minVersion="2.0"
+	                   em:maxVersion="2.0.0.*" />
+	</em:targetApplication>
+  </RDF:Description>
+</RDF:RDF>

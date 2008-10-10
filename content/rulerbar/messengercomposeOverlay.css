@@ -1,0 +1,80 @@
+#ruler-bar > *,
+.ruler-unit-box {
+	overflow: hidden;
+}
+
+#ruler-bar {
+	height: 1em;
+	background: -moz-Field;
+	border-left: 1px solid ThreeDDarkShadow;
+	border-right: 1px solid ThreeDLightShadow;
+}
+
+#ruler-bar > * {
+	font-size: 90%;
+	-moz-box-align: start;
+}
+
+.ruler-unit-box {
+	position: relative;
+	z-index: 200;
+	border-left: 3px solid transparent;
+	-moz-border-left-colors: transparent transparent transparent;
+}
+
+.ruler-unit-box.level3 {
+	height: 0.8em;
+	margin-bottom: 0.2em;
+	color: -moz-FieldText;
+	opacity: 0.6;
+	-moz-border-left-colors: -moz-FieldText transparent transparent;
+	z-index: 500;
+}
+
+.ruler-unit-box.level2 {
+	height: 0.5em;
+	margin-bottom: 0.5em;
+	color: -moz-FieldText;
+	opacity: 0.4;
+	-moz-border-left-colors: -moz-FieldText transparent transparent;
+}
+
+.ruler-unit-box.level1 {
+	height: 0.4em;
+	margin-bottom: 0.6em;
+	color: -moz-FieldText;
+	opacity: 0.3;
+	-moz-border-left-colors: -moz-FieldText transparent transparent;
+}
+
+.ruler-unit-box.level0 {
+	height: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.ruler-unit-box.wrapLength {
+	height: 0.8em;
+	margin-bottom: 0.2em;
+	opacity: 0.75;
+	-moz-border-left-colors: -moz-FieldText -moz-FieldText transparent;
+}
+
+.ruler-unit-box > label {
+	font-size: 80%;
+	margin: 0.1em 0 0 0.1em;
+	padding: 0;
+	min-width: 0;
+	min-height: 0;
+}
+
+.ruler-unit-box[ruler-cursor-box="true"] {
+	height: 0.8em !important;
+	margin-bottom: 0.2em !important;
+	opacity: 1 !important;
+	-moz-border-left-colors: -moz-FieldText -moz-FieldText -moz-FieldText;
+}
+
+.ruler-unit-box[ruler-cursor-box="true"] > label {
+	opacity: 0.6;
+}
+

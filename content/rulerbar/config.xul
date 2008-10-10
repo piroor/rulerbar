@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/"?>
+<!DOCTYPE prefwindow SYSTEM "chrome://rulerbar/locale/rulerbar.dtd">
+<prefwindow id="rulerbar-config"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="&config.title;">
+
+<prefpane id="prefpane-general">
+	<preferences>
+		<preference id="extensions.rulerbar.shouldRoop"
+			name="extensions.rulerbar.shouldRoop"
+			type="bool"/>
+		<preference id="extensions.rulerbar.column.level3"
+			name="extensions.rulerbar.column.level3"
+			type="int"/>
+		<preference id="extensions.rulerbar.column.level1"
+			name="extensions.rulerbar.column.level1"
+			type="int"/>
+		<preference id="extensions.rulerbar.scale"
+			name="extensions.rulerbar.scale"
+			type="int"/>
+	</preferences>
+
+	<checkbox id="extensions.rulerbar.shouldRoop-check"
+		label="&config.shouldRoop;"
+		preference="extensions.rulerbar.shouldRoop"/>
+
+	<hbox align="center">
+		<label value="&config.column.level3.before;"
+			control="extensions.rulerbar.column.level3-textbox"/>
+		<textbox id="extensions.rulerbar.column.level3-textbox"
+			preference="extensions.rulerbar.column.level3"
+			style="width: 3em;"
+			type="number" min="1" increment="1"/>
+		<label value="&config.column.level3.after;"
+			control="extensions.rulerbar.column.level3-textbox"/>
+	</hbox>
+	<hbox align="center">
+		<label value="&config.column.level1.before;"
+			control="extensions.rulerbar.column.level1-textbox"/>
+		<textbox id="extensions.rulerbar.column.level1-textbox"
+			preference="extensions.rulerbar.column.level1"
+			style="width: 3em;"
+			type="number" min="1" increment="1"/>
+		<label value="&config.column.level1.after;"
+			control="extensions.rulerbar.column.level1-textbox"/>
+	</hbox>
+	<hbox align="center">
+		<label value="&config.scale.before;"
+			control="extensions.rulerbar.scale-textbox"/>
+		<textbox id="extensions.rulerbar.scale-textbox"
+			preference="extensions.rulerbar.scale"
+			style="width: 3em;"
+			type="number" min="1" increment="1"/>
+		<label value="&config.scale.after;"
+			control="extensions.rulerbar.scale-textbox"/>
+	</hbox>
+
+</prefpane>
+
+</prefwindow>

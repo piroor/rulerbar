@@ -1,0 +1,6 @@
+content	rulerbar	jar:chrome/rulerbar.jar!/content/rulerbar/
+
+overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://rulerbar/content/messengercomposeOverlay.xul
+
+locale	rulerbar	en-US	jar:chrome/rulerbar.jar!/locale/en-US/rulerbar/
+locale	rulerbar	ja	jar:chrome/rulerbar.jar!/locale/ja/rulerbar/
