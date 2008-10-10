@@ -34,13 +34,13 @@
  * ***** END LICENSE BLOCK ***** */
  
 var RulerBar = { 
-	 
+	
 	kBAR             : 'ruler-bar', 
 	kCURSOR          : 'ruler-cursor-box',
 	kRULER_UNIT_BOX  : 'ruler-unit-box',
  
 /* properties */ 
-	 
+	
 	tabWidth : 8, 
 	maxCount : 300,
 	nonAsciiWidth : 2,
@@ -105,12 +105,12 @@ var RulerBar = {
 	},
   
 /* elements */ 
-	 
+	
 	get bar() 
 	{
 		return document.getElementById(this.kBAR);
 	},
-	 
+	
 	get cursor() 
 	{
 		var nodes = document.getElementsByAttribute(this.kCURSOR, 'true');
@@ -126,7 +126,7 @@ var RulerBar = {
 	{
 		return document.getElementById('content-frame');
 	},
-	 
+	
 	get contentWindow() 
 	{
 		return this.frame.contentWindow;
@@ -160,16 +160,19 @@ var RulerBar = {
 				break;
 
 			case 'DOMAttrModified':
-				if (aEvent.target == this.body &&
-					aEvent.attrName == 'text' ||
-					aEvent.attrName == 'bgcolor')
+				if (
+					aEvent.target == this.body &&
+					(aEvent.attrName == 'text' || aEvent.attrName == 'bgcolor')
+					) {
 					window.setTimeout(function(aSelf) {
 						aSelf.updateRulerAppearance();
 					}, 0, this);
+				}
 				break;
 
 			case 'compose-window-close':
 				this.body.removeEventListener('DOMAttrModified', this, true);
+//				this.body.removeEventListener('DOMNodeInserted', this, true);
 				this._lastLength = 0;
 				break;
 		}
@@ -206,7 +209,7 @@ var RulerBar = {
 	},
   
 /* initialize */ 
-	 
+	
 	init : function() 
 	{
 		window.removeEventListener('DOMContentLoaded', this, false);
@@ -228,7 +231,7 @@ var RulerBar = {
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level1');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.scale');
 	},
-	 
+	
 	overrideStartupMethod : function() 
 	{
 		eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
@@ -249,6 +252,7 @@ var RulerBar = {
 	{
 		window.setTimeout(function(aSelf) {
 			aSelf.body.addEventListener('DOMAttrModified', aSelf, true);
+//			aSelf.body.addEventListener('DOMNodeInserted', aSelf, true);
 		}, 0, this);
 	},
   
@@ -277,7 +281,7 @@ var RulerBar = {
 			aSelf._createTimer = null;
 		}, 0, this);
 	},
-	 
+	
 	updateRulerAppearance : function(aBar) 
 	{
 		(aBar || this.bar).setAttribute(
@@ -372,13 +376,17 @@ var RulerBar = {
 		var line = node.nodeValue || '';
 		var offset = sel.focusOffset;
 
+		var walker = node.ownerDocument.createTreeWalker(
+				this.body,
+				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+				this,
+				false
+			);
+		walker.currentNode = node;
+
 		var part;
 		while (
-			(node = (
-				node.previousSibling ||
-				(node.parentNode && node.parentNode.previousSibling)
-				)
-			) &&
+			(node = walker.previousNode()) &&
 			!this.isBody(node) &&
 			!this.isBR(node)
 			)
@@ -443,7 +451,14 @@ var RulerBar = {
 	},
 	_updating : false,
 	_lastLength : 0,
- 	 
+	
+	acceptNode : function(aNode) 
+	{
+		return this.isBR(aNode) || this.isBody(aNode) ?
+			NodeFilter.FILTER_ACCEPT :
+			NodeFilter.FILTER_SKIP ;
+	},
+   
 	isBR : function(aNode) 
 	{
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
