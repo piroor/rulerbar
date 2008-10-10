@@ -78,7 +78,7 @@ var RulerBar = {
 		targets.push(root.marginLeft);
 		targets.push(root.paddingLeft);
 
-		var body = w.getComputedStyle(d.getElementsByTagName('body')[0], '');
+		var body = w.getComputedStyle(this.body, '');
 		targets.push(body.borderLeftWidth);
 		targets.push(body.marginLeft);
 		targets.push(body.paddingLeft);
@@ -93,15 +93,12 @@ var RulerBar = {
  
 	get color() 
 	{
-		var w = this.contentWindow;
-		var color = w.getComputedStyle(w.document.getElementsByTagName('body')[0], '').color;
-		return color;
+		return this.contentWindow.getComputedStyle(this.body, '').color;
 	},
  
 	get backgroundColor() 
 	{
-		var w = this.contentWindow;
-		var color = w.getComputedStyle(w.document.getElementsByTagName('body')[0], '').backgroundColor;
+		var color = this.contentWindow.getComputedStyle(this.body, '').backgroundColor;
 		if (color == 'transparent')
 			color = this.getPref('browser.display.background_color');
 		return color;
@@ -113,7 +110,7 @@ var RulerBar = {
 	{
 		return document.getElementById(this.kBAR);
 	},
-	
+	 
 	get cursor() 
 	{
 		var nodes = document.getElementsByAttribute(this.kCURSOR, 'true');
@@ -129,7 +126,7 @@ var RulerBar = {
 	{
 		return document.getElementById('content-frame');
 	},
-	
+	 
 	get contentWindow() 
 	{
 		return this.frame.contentWindow;
@@ -138,6 +135,11 @@ var RulerBar = {
 	get editor() 
 	{
 		return GetCurrentEditor();
+	},
+ 
+	get body() 
+	{
+		return this.contentWindow.document.getElementsByTagName('body')[0];
 	},
    
 	handleEvent : function(aEvent) 
@@ -157,14 +159,24 @@ var RulerBar = {
 				this.addSelectionListener();
 				break;
 
+			case 'DOMAttrModified':
+				if (aEvent.target == this.body &&
+					aEvent.attrName == 'text' ||
+					aEvent.attrName == 'bgcolor')
+					window.setTimeout(function(aSelf) {
+						aSelf.updateRulerAppearance();
+					}, 0, this);
+				break;
+
 			case 'compose-window-close':
+				this.body.removeEventListener('DOMAttrModified', this, true);
 				this._lastLength = 0;
 				break;
 		}
 	},
  
 /* selection */ 
-	 
+	
 	notifySelectionChanged : function(aDocument, aSelection, aReason) 
 	{
 		this.updateCursor();
@@ -194,7 +206,7 @@ var RulerBar = {
 	},
   
 /* initialize */ 
-	
+	 
 	init : function() 
 	{
 		window.removeEventListener('DOMContentLoaded', this, false);
@@ -221,7 +233,7 @@ var RulerBar = {
 	{
 		eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
 			'{',
-			'{ RulerBar.reset();'
+			'{ RulerBar.delayedInit(); RulerBar.reset();'
 		));
 	},
  
@@ -231,6 +243,13 @@ var RulerBar = {
 			this.bar.parentNode.removeChild(this.bar);
 		}
 		this.createRuler();
+	},
+ 
+	delayedInit : function() 
+	{
+		window.setTimeout(function(aSelf) {
+			aSelf.body.addEventListener('DOMAttrModified', aSelf, true);
+		}, 0, this);
 	},
   
 	destroy : function() 
@@ -355,7 +374,11 @@ var RulerBar = {
 
 		var part;
 		while (
-			(node = node.previousSibling) &&
+			(node = (
+				node.previousSibling ||
+				(node.parentNode && node.parentNode.previousSibling)
+				)
+			) &&
 			!this.isBody(node) &&
 			!this.isBR(node)
 			)
@@ -420,7 +443,7 @@ var RulerBar = {
 	},
 	_updating : false,
 	_lastLength : 0,
-  	
+ 	 
 	isBR : function(aNode) 
 	{
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
