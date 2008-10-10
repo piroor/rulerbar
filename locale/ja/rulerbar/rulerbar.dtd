@@ -33,7 +33,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY config.title "ルーラの設定">
+<!ENTITY config.title "ルーラーの設定">
 <!ENTITY config.shouldRoop           "テキストメールでは指定文字数で折り返す">
 <!ENTITY config.column.level3.before "">
 <!ENTITY config.column.level3.after "文字ごとに文字数を表示する">

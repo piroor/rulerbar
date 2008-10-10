@@ -27,8 +27,8 @@
     </em:localized>
     <em:localized>
       <RDF:Description em:locale="ja-JP"
-                       em:name="ルーラバー (Ruler Bar)"
-                       em:description="メール作成ウィンドウにルーラを表示します。"
+                       em:name="ルーラーバー (Ruler Bar)"
+                       em:description="メール作成ウィンドウにルーラーを表示します。"
                        em:homepageURL="http://piro.sakura.ne.jp/xul/_rulerbar.html"
                        em:creator="SHIMODA Hiroshi"/>
     </em:localized>
