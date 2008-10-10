@@ -90,21 +90,37 @@ var RulerBar = {
 
 		return offset;
 	},
+ 
+	get color() 
+	{
+		var w = this.contentWindow;
+		var color = w.getComputedStyle(w.document.getElementsByTagName('body')[0], '').color;
+		return color;
+	},
+ 
+	get backgroundColor() 
+	{
+		var w = this.contentWindow;
+		var color = w.getComputedStyle(w.document.getElementsByTagName('body')[0], '').backgroundColor;
+		if (color == 'transparent')
+			color = this.getPref('browser.display.background_color');
+		return color;
+	},
   
 /* elements */ 
-	
+	 
 	get bar() 
 	{
 		return document.getElementById(this.kBAR);
 	},
-	 
+	
 	get cursor() 
 	{
 		var nodes = document.getElementsByAttribute(this.kCURSOR, 'true');
 		return nodes && nodes.length ? nodes[0] : null ;
 	},
  
-	get cells() 
+	get marks() 
 	{
 		return Array.slice(document.getElementsByAttribute(this.kRULER_UNIT_BOX, 'true'));
 	},
@@ -113,7 +129,7 @@ var RulerBar = {
 	{
 		return document.getElementById('content-frame');
 	},
-	 
+	
 	get contentWindow() 
 	{
 		return this.frame.contentWindow;
@@ -178,7 +194,7 @@ var RulerBar = {
 	},
   
 /* initialize */ 
-	 
+	
 	init : function() 
 	{
 		window.removeEventListener('DOMContentLoaded', this, false);
@@ -216,7 +232,7 @@ var RulerBar = {
 		}
 		this.createRuler();
 	},
-  	
+  
 	destroy : function() 
 	{
 		window.removeEventListener('unload', this, false);
@@ -227,24 +243,33 @@ var RulerBar = {
   
 	createRuler : function() 
 	{
-		var fontSize = this.fontSize;
 		var bar = document.createElement('stack');
 		bar.setAttribute('id', this.kBAR);
-		bar.setAttribute('style', 'font-size:'+fontSize+'px');
+		this.updateRulerAppearance(bar);
 
 		var frame = this.frame;
 		frame.parentNode.insertBefore(bar, frame);
 
 		if (this._createTimer) return;
 		this._createTimer = window.setTimeout(function(aSelf) {
-			aSelf.buildRulerCells();
-			aSelf.updateBarOffset();
+			aSelf.buildRulerMarks();
+			aSelf.updateOffset();
 			aSelf.updateCursor();
 			aSelf._createTimer = null;
 		}, 0, this);
 	},
 	 
-	buildRulerCells : function() 
+	updateRulerAppearance : function(aBar) 
+	{
+		(aBar || this.bar).setAttribute(
+			'style',
+			'font-size:'+this.fontSize+'px;'+
+			'color:'+this.color+';'+
+			'background-color:'+this.backgroundColor+';'
+		);
+	},
+ 
+	buildRulerMarks : function() 
 	{
 		var bar = this.bar;
 		var rulerBox = document.createElement('hbox');
@@ -292,7 +317,7 @@ var RulerBar = {
 		bar.appendChild(rulerBox);
 	},
  
-	updateBarOffset : function() 
+	updateOffset : function() 
 	{
 		var offset = this.offset;
 		Array.slice(this.bar.childNodes).forEach(function(aNode) {
@@ -312,9 +337,9 @@ var RulerBar = {
 		var lastPos = 0;
 
 		var cursor = this.cursor;
-		var cells = this.cells;
+		var marks = this.marks;
 		if (cursor) {
-			lastPos = cells.indexOf(cursor);
+			lastPos = marks.indexOf(cursor);
 			cursor.removeAttribute(this.kCURSOR);
 		}
 
@@ -388,14 +413,14 @@ var RulerBar = {
 			pos = newPos;
 		}
 
-		if (pos in cells)
-			cells[pos].setAttribute(this.kCURSOR, true);
+		if (pos in marks)
+			marks[pos].setAttribute(this.kCURSOR, true);
 
 		this._updating = false;
 	},
 	_updating : false,
 	_lastLength : 0,
-  
+  	
 	isBR : function(aNode) 
 	{
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
@@ -409,7 +434,7 @@ var RulerBar = {
 	},
  
 /* Prefs */ 
-	 
+	
 	get Prefs() 
 	{
 		if (!this._Prefs) {

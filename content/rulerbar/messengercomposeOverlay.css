@@ -40,7 +40,6 @@
 
 #ruler-bar {
 	height: 1em;
-	background: -moz-Field;
 	border-left: 1px solid ThreeDDarkShadow;
 	border-right: 1px solid ThreeDLightShadow;
 }
@@ -53,33 +52,28 @@
 .ruler-unit-box {
 	position: relative;
 	z-index: 200;
-	border-left: 3px solid transparent;
-	-moz-border-left-colors: transparent transparent transparent;
 }
 
 .ruler-unit-box.level3 {
 	height: 0.8em;
 	margin-bottom: 0.2em;
-	color: -moz-FieldText;
 	opacity: 0.6;
-	-moz-border-left-colors: -moz-FieldText transparent transparent;
+	border-left: 1px solid;
 	z-index: 500;
 }
 
 .ruler-unit-box.level2 {
 	height: 0.5em;
 	margin-bottom: 0.5em;
-	color: -moz-FieldText;
 	opacity: 0.4;
-	-moz-border-left-colors: -moz-FieldText transparent transparent;
+	border-left: 1px solid;
 }
 
 .ruler-unit-box.level1 {
 	height: 0.4em;
 	margin-bottom: 0.6em;
-	color: -moz-FieldText;
 	opacity: 0.3;
-	-moz-border-left-colors: -moz-FieldText transparent transparent;
+	border-left: 1px solid;
 }
 
 .ruler-unit-box.level0 {
@@ -91,7 +85,7 @@
 	height: 0.8em;
 	margin-bottom: 0.2em;
 	opacity: 0.75;
-	-moz-border-left-colors: -moz-FieldText -moz-FieldText transparent;
+	border-left: 2px solid;
 }
 
 .ruler-unit-box > label {
@@ -106,7 +100,7 @@
 	height: 0.8em !important;
 	margin-bottom: 0.2em !important;
 	opacity: 1 !important;
-	-moz-border-left-colors: -moz-FieldText -moz-FieldText -moz-FieldText;
+	border-left: 3px solid !important;
 }
 
 .ruler-unit-box[ruler-cursor-box="true"] > label {
