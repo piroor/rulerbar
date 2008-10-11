@@ -371,15 +371,6 @@ var RulerBar = {
 		var pos = line.leftCount;
 		var rest = line.rightCount;
 
-		var wrapLength = this.wrapLength;
-		if (
-			this.shouldRoop &&
-			wrapLength > 0 &&
-			pos > wrapLength
-			) {
-			pos = pos % wrapLength;
-		}
-
 /*
 		const nsIDOMKeyEvents = Components.interfaces.nsIDOMKeyEvents;
 		const nsISelectionListener = Components.interfaces.nsISelectionListener;
@@ -442,32 +433,73 @@ var RulerBar = {
 		right = right.split(/[\n\r]+/);
 		right = right[0];
 
-		return {
+		return this.processWrap({
 			left       : left,
-			leftCount  : this.countCharacters(left),
+			leftCount  : this.getLogicalLength(left),
 			right      : right,
-			rightCount : this.countCharacters(right)
-		};
+			rightCount : this.getLogicalLength(right)
+		});
 	},
 	
-	countCharacters : function(aString) 
+	getLogicalLength : function(aString) 
 	{
 		var count = 0;
-		var char;
-		for (var i = 0, maxi = aString.length; i < maxi; i++)
-		{
-			char = aString.charCodeAt(i);
-			if (char == 9) { // Tab
-				count += this.tabWidth;
-			}
-			else if (char >=  0 && char <= 127) { // ASCII
-				count++;
-			}
-			else {
-				count += this.nonAsciiWidth;
-			}
-		}
+		aString.split('').forEach(function(aChar) {
+			count += this.getLogicalLengthOfCharacter(aChar);
+		}, this);
 		return count;
+	},
+	
+	getLogicalLengthOfCharacter : function(aChar) 
+	{
+		var code = aChar.charCodeAt(0);
+		if (code == 9) { // Tab
+			return this.tabWidth;
+		}
+		else if (code >=  0 && code <= 127) { // ASCII
+			return 1;
+		}
+		else {
+			return this.nonAsciiWidth;
+		}
+	},
+  
+	processWrap : function(aLine) 
+	{
+		var wrapLength = this.wrapLength;
+		if (!this.shouldRoop || wrapLength <= 0)
+			return aLine;
+
+		var leftCount = aLine.leftCount;
+		if (leftCount > wrapLength) {
+			leftCount = leftCount % wrapLength;
+			var oldLeft = aLine.left.split('').reverse();
+			var newLeft = '';
+			for (let count = 0, char, i = 0; count < leftCount; i++)
+			{
+				char = oldLeft[i];
+				newLeft = char + newLeft;
+				count += this.getLogicalLengthOfCharacter(char);
+			}
+			aLine.left = newLeft;
+			aLine.leftCount = leftCount;
+		}
+
+		if (aLine.leftCount + aLine.rightCount > wrapLength) {
+			var rightCount = ((aLine.leftCount + aLine.rightCount) % wrapLength) - aLine.leftCount;
+			var oldRight = aLine.right.split('');
+			var newRight = '';
+			for (let count = 0, char, i = 0; count < rightCount; i++)
+			{
+				char = oldRight[i];
+				newRight = char + newLeft;
+				count += this.getLogicalLengthOfCharacter(char);
+			}
+			aLine.right = newRight;
+			aLine.rightCount = rightCount;
+		}
+
+		return aLine;
 	},
   
 	acceptNode : function(aNode) 
