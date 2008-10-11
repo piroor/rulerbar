@@ -384,24 +384,6 @@ var RulerBar = {
 		var pos = line.leftCount;
 		var rest = line.rightCount;
 
-/*
-		const nsIDOMKeyEvents = Components.interfaces.nsIDOMKeyEvents;
-		const nsISelectionListener = Components.interfaces.nsISelectionListener;
-		if (
-			aReason &&
-			aReason & nsISelectionListener.KEYPRESS_REASON &&
-			!(aReason & nsISelectionListener.SELECTALL_REASON)
-			) {
-			if (this.lastKeyCode == nsIDOMKeyEvents.DOM_VK_LEFT) {
-				if (lastPos != 0) {
-					pos =
-				}
-				else {
-				}
-			}
-		}
-*/
-
 		if (pos in marks)
 			marks[pos].setAttribute(this.kCURSOR, true);
 
@@ -417,9 +399,10 @@ var RulerBar = {
 			node = this.getPreviousNodeFromSelection(aSelection) || node;
 			offset = node.nodeType == Node.TEXT_NODE ? node.nodeValue.length : 0 ;
 		}
+		var focusNode = node;
 
 		var left = (node.nodeValue || '').substring(0, offset);
-		var right = (node.nodeValue || '').substring(offset+1);
+		var right = (node.nodeValue || '').substring(offset);
 
 		var walker = node.ownerDocument.createTreeWalker(
 				node.ownerDocument,
@@ -428,7 +411,7 @@ var RulerBar = {
 				false
 			);
 
-		walker.currentNode = aSelection.focusNode;
+		walker.currentNode = focusNode;
 		while (
 			(node = walker.previousNode()) &&
 			!this.isBody(node) &&
@@ -440,7 +423,7 @@ var RulerBar = {
 		left = left.split(/[\n\r]+/);
 		left = left[left.length-1];
 
-		walker.currentNode = aSelection.focusNode;
+		walker.currentNode = focusNode;
 		while (
 			(node = walker.nextNode()) &&
 			!this.isBody(node) &&
@@ -452,12 +435,16 @@ var RulerBar = {
 		right = right.split(/[\n\r]+/);
 		right = right[0];
 
-		return this.processWrap({
-			left       : left,
-			leftCount  : this.getLogicalLength(left),
-			right      : right,
-			rightCount : this.getLogicalLength(right)
-		});
+		return this.processWrap(
+			{
+				focusNode  : focusNode,
+				left       : left,
+				leftCount  : this.getLogicalLength(left),
+				right      : right,
+				rightCount : this.getLogicalLength(right)
+			},
+			aReason
+		);
 	},
 	
 	getPreviousNodeFromSelection : function(aSelection) 
@@ -507,15 +494,23 @@ var RulerBar = {
 		}
 	},
   
-	processWrap : function(aLine) 
+	processWrap : function(aLine, aReason) 
 	{
 		var wrapLength = this.wrapLength;
 		if (!this.shouldRoop || wrapLength <= 0)
 			return aLine;
 
+		var orig = {
+				focusNode  : aLine.focusNode,
+				left       : aLine.left,
+				leftCount  : aLine.leftCount,
+				right      : aLine.right,
+				rightCount : aLine.rightCount
+			};
+
 		var leftCount = aLine.leftCount;
 		if (leftCount > wrapLength) {
-			leftCount = leftCount % wrapLength;
+			leftCount = (leftCount % wrapLength) || wrapLength;
 			var oldLeft = aLine.left.split('').reverse();
 			var newLeft = '';
 			for (let count = 0, char, i = 0; count < leftCount; i++)
@@ -529,13 +524,13 @@ var RulerBar = {
 		}
 
 		if (aLine.leftCount + aLine.rightCount > wrapLength) {
-			var rightCount = ((aLine.leftCount + aLine.rightCount) % wrapLength) - aLine.leftCount;
+			var rightCount = wrapLength - aLine.leftCount;
 			var oldRight = aLine.right.split('');
 			var newRight = '';
 			for (let count = 0, char, i = 0; count < rightCount; i++)
 			{
 				char = oldRight[i];
-				newRight = char + newLeft;
+				newRight = char + newRight;
 				count += this.getLogicalLengthOfCharacter(char);
 			}
 			aLine.right = newRight;
