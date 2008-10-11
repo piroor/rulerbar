@@ -450,7 +450,7 @@ var RulerBar = {
 		};
 	},
 	
-	countCharcters : function(aString) 
+	countCharacters : function(aString) 
 	{
 		var count;
 		var char;
