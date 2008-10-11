@@ -38,6 +38,11 @@ var RulerBar = {
 	kBAR        : 'ruler-bar', 
 	kCURSOR     : 'current',
 	kRULER_CELL : 'ruler-cell',
+
+	kLINE_TOP : 1,
+	kLINE_END : 2,
+	kLINE_MIDDLE : 4,
+	lastPosition : 1, // kLINE_END
  
 /* properties */ 
 	
@@ -380,6 +385,7 @@ var RulerBar = {
 		if (this._updating || !this.editor) return;
 
 		this._updating = true;
+		this.lastReason = aReason || 0 ;
 
 		var lastPos = 0;
 		var cursor = this.cursor;
@@ -389,16 +395,18 @@ var RulerBar = {
 			cursor.removeAttribute(this.kCURSOR);
 		}
 
-		var line = this.getCurrentLine(this.editor.selection, aReason);
-		var pos = line.cursor;
+		var line = this.getCurrentLine(this.editor.selection);
+		var pos = (this.lastPosition == this.kLINE_TOP) ? 0 : line.leftCount ;
 		if (pos in marks)
 			marks[pos].setAttribute(this.kCURSOR, true);
 
 		this._updating = false;
 	},
 	_updating : false,
+	lastReason : -1,
+
 	
-	getCurrentLine : function(aSelection, aReason) 
+	getCurrentLine : function(aSelection) 
 	{
 		var node = aSelection.focusNode;
 		var offset = aSelection.focusOffset;
@@ -442,15 +450,13 @@ var RulerBar = {
 		right = right.split(/[\n\r]+/);
 		right = right[0];
 
-		var line = {
-				focusNode  : focusNode,
-				left       : left,
-				leftCount  : this.getLogicalLength(left),
-				right      : right,
-				rightCount : this.getLogicalLength(right),
-			};
-		line.cursor = line.leftCount;
-		return this.processWrap(line, aReason);
+		return this.processWrap({
+			focusNode  : focusNode,
+			left       : left,
+			leftCount  : this.getLogicalLength(left),
+			right      : right,
+			rightCount : this.getLogicalLength(right),
+		});
 	},
 	
 	getPreviousNodeFromSelection : function(aSelection) 
@@ -500,20 +506,11 @@ var RulerBar = {
 		}
 	},
   
-	processWrap : function(aLine, aReason) 
+	processWrap : function(aLine) 
 	{
 		var wrapLength = this.wrapLength;
 		if (!this.shouldRoop || wrapLength <= 0)
 			return aLine;
-
-		var orig = {
-				focusNode  : aLine.focusNode,
-				left       : aLine.left,
-				leftCount  : aLine.leftCount,
-				right      : aLine.right,
-				rightCount : aLine.rightCount,
-				cursor     : aLine.cursor
-			};
 
 		var leftCount = aLine.leftCount;
 		if (leftCount > wrapLength) {
@@ -544,28 +541,73 @@ var RulerBar = {
 			aLine.rightCount = rightCount;
 		}
 
-		aLine.cursor = aLine.leftCount;
-
-		// May be last of the line or top of the next line
-		if (aLine.leftCount == wrapLength && !aLine.rightCount) {
-			const nsISelectionListener = Components.interfaces.nsISelectionListener;
-			if (
-				aReason &&
-				(
-					aReason & nsISelectionListener.MOUSEDOWN_REASON ||
-					aReason & nsISelectionListener.MOUSEUP_REASON
-				)
-				) {
-				var bodyBox = this.contentWindow.document.getBoxObjectFor(this.body);
-				if (this.lastClickedScreenX < bodyBox.screenX + (bodyBox.width / 3)) {
-					aLine.cursor = 0;
-				}
-			}
-		}
+		this.lastPosition = this.calculateNewPosition(aLine);
 
 		return aLine;
 	},
-  
+	
+	calculateNewPosition : function(aLine) 
+	{
+		if (aLine.leftCount != this.wrapLength) {
+			return this.isBR(aLine.focusNode) ? this.kLINE_TOP :
+				!aLine.leftCount ? this.kLINE_TOP :
+				!aLine.rightCount ? this.kLINE_END :
+				this.kLINE_MIDDLE ;
+		}
+
+		// Maybe last of the line or top of the next line
+		var onTop = false;
+		const nsISelectionListener = Components.interfaces.nsISelectionListener;
+		var reason = this.lastReason;
+		if (
+			!aLine.rightCount &&
+			reason &&
+			(
+				reason & nsISelectionListener.MOUSEDOWN_REASON ||
+				reason & nsISelectionListener.MOUSEUP_REASON
+			)
+			) {
+			var bodyBox = this.contentWindow.document.getBoxObjectFor(this.body);
+			onTop = this.lastClickedScreenX < bodyBox.screenX + (bodyBox.width / 3);
+		}
+		else if (
+			reason &&
+			reason & nsISelectionListener.KEYPRESS_REASON &&
+			!(reason & nsISelectionListener.SELECTALL_REASON)
+			) {
+			const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
+			switch (this.lastKeyCode)
+			{
+				case nsIDOMKeyEvent.DOM_VK_LEFT:
+					onTop = this.lastPosition == this.kLINE_MIDDLE;
+					break;
+
+				case nsIDOMKeyEvent.DOM_VK_RIGHT:
+					onTop = this.lastPosition == this.kLINE_END;
+					break;
+
+				case nsIDOMKeyEvent.DOM_VK_UP:
+				case nsIDOMKeyEvent.DOM_VK_DOWN:
+				case nsIDOMKeyEvent.DOM_VK_PAGE_UP:
+				case nsIDOMKeyEvent.DOM_VK_PAGE_DOWN:
+					onTop = this.lastPosition == this.kLINE_TOP;
+					break;
+
+				case nsIDOMKeyEvent.DOM_VK_HOME:
+					onTop = true;
+					break;
+
+				case nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
+					onTop = this.lastPosition == this.kLINE_MIDDLE;
+					break;
+
+				default:
+					break;
+			}
+		}
+		return onTop ? this.kLINE_TOP : this.kLINE_END ;
+	},
+   
 	acceptNode : function(aNode) 
 	{
 		return this.isBR(aNode) || this.isBody(aNode) ?
