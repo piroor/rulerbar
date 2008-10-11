@@ -157,12 +157,15 @@ var RulerBar = {
 				break;
 
 			case 'keypress':
-				this.lastKeyCode = aEvent.keyCode;
 				this.addSelectionListener();
+				this.lastKeyCode = aEvent.keyCode;
 				break;
 
 			case 'click':
 				this.addSelectionListener();
+			case 'dragover':
+				this.lastClickedScreenX = aEvent.screenX;
+				this.lastClickedScreenY = aEvent.screenY;
 				break;
 
 			case 'DOMAttrModified':
@@ -182,12 +185,16 @@ var RulerBar = {
 	},
 	
 	lastKeyCode : -1, 
+	lastClickedScreenX : -1,
+	lastClickedScreenY : -1,
   
 /* selection */ 
 	
 	notifySelectionChanged : function(aDocument, aSelection, aReason) 
 	{
-		this.updateCursor(aReason);
+		window.setTimeout(function(aSelf) {
+			aSelf.updateCursor(aReason);
+		}, 0, this, aReason);
 	},
  
 	addSelectionListener : function() 
@@ -223,6 +230,7 @@ var RulerBar = {
 		document.documentElement.addEventListener('compose-window-close', this, false);
 		this.frame.addEventListener('keypress', this, false);
 		this.frame.addEventListener('click', this, false);
+		this.frame.addEventListener('dragover', this, false);
 
 		this.addPrefListener();
 		this.observe(null, 'nsPref:changed', 'mailnews.wraplength');
@@ -263,8 +271,9 @@ var RulerBar = {
 	{
 		window.removeEventListener('unload', this, false);
 		document.documentElement.removeEventListener('compose-window-close', this, false);
-		this.frame.addEventListener('keypress', this, false);
-		this.frame.addEventListener('click', this, false);
+		this.frame.removeEventListener('keypress', this, false);
+		this.frame.removeEventListener('click', this, false);
+		this.frame.removeEventListener('dragover', this, false);
 		this.removePrefListener();
 		this.removeSelectionListener();
 	},
@@ -381,9 +390,7 @@ var RulerBar = {
 		}
 
 		var line = this.getCurrentLine(this.editor.selection, aReason);
-		var pos = line.leftCount;
-		var rest = line.rightCount;
-
+		var pos = line.cursor;
 		if (pos in marks)
 			marks[pos].setAttribute(this.kCURSOR, true);
 
@@ -435,16 +442,15 @@ var RulerBar = {
 		right = right.split(/[\n\r]+/);
 		right = right[0];
 
-		return this.processWrap(
-			{
+		var line = {
 				focusNode  : focusNode,
 				left       : left,
 				leftCount  : this.getLogicalLength(left),
 				right      : right,
-				rightCount : this.getLogicalLength(right)
-			},
-			aReason
-		);
+				rightCount : this.getLogicalLength(right),
+			};
+		line.cursor = line.leftCount;
+		return this.processWrap(line, aReason);
 	},
 	
 	getPreviousNodeFromSelection : function(aSelection) 
@@ -505,7 +511,8 @@ var RulerBar = {
 				left       : aLine.left,
 				leftCount  : aLine.leftCount,
 				right      : aLine.right,
-				rightCount : aLine.rightCount
+				rightCount : aLine.rightCount,
+				cursor     : aLine.cursor
 			};
 
 		var leftCount = aLine.leftCount;
@@ -535,6 +542,25 @@ var RulerBar = {
 			}
 			aLine.right = newRight;
 			aLine.rightCount = rightCount;
+		}
+
+		aLine.cursor = aLine.leftCount;
+
+		// May be last of the line or top of the next line
+		if (aLine.leftCount == wrapLength && !aLine.rightCount) {
+			const nsISelectionListener = Components.interfaces.nsISelectionListener;
+			if (
+				aReason &&
+				(
+					aReason & nsISelectionListener.MOUSEDOWN_REASON ||
+					aReason & nsISelectionListener.MOUSEUP_REASON
+				)
+				) {
+				var bodyBox = this.contentWindow.document.getBoxObjectFor(this.body);
+				if (this.lastClickedScreenX < bodyBox.screenX + (bodyBox.width / 3)) {
+					aLine.cursor = 0;
+				}
+			}
 		}
 
 		return aLine;
