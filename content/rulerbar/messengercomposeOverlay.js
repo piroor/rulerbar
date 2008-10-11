@@ -352,7 +352,7 @@ var RulerBar = {
 			aNode.setAttribute('style', 'margin-left:'+offset+'px');
 		}, this);
 	},
- 
+  
 	updateCursor : function(aReason) 
 	{
 		if (this._updating || !this.editor) return;
@@ -367,7 +367,7 @@ var RulerBar = {
 			cursor.removeAttribute(this.kCURSOR);
 		}
 
-		var line = this.getCurrentLine(this.editor.selection);
+		var line = this.getCurrentLine(this.editor.selection, aReason);
 		var pos = line.leftCount;
 		var rest = line.rightCount;
 
@@ -396,11 +396,17 @@ var RulerBar = {
 	},
 	_updating : false,
 	
-	getCurrentLine : function(aSelection) 
+	getCurrentLine : function(aSelection, aReason) 
 	{
 		var node = aSelection.focusNode;
-		var left = (node.nodeValue || '').substring(0, aSelection.focusOffset);
-		var right = (node.nodeValue || '').substring(aSelection.focusOffset+1);
+		var offset = aSelection.focusOffset;
+		if (node.nodeType != Node.TEXT_NODE) {
+			node = this.getPreviousNodeFromSelection(aSelection) || node;
+			offset = node.nodeType == Node.TEXT_NODE ? node.nodeValue.length : 0 ;
+		}
+
+		var left = (node.nodeValue || '').substring(0, offset);
+		var right = (node.nodeValue || '').substring(offset+1);
 
 		var walker = node.ownerDocument.createTreeWalker(
 				node.ownerDocument,
@@ -441,6 +447,30 @@ var RulerBar = {
 		});
 	},
 	
+	getPreviousNodeFromSelection : function(aSelection) 
+	{
+		var doc = aSelection.focusNode.ownerDocument;
+		var walker = doc.createTreeWalker(
+				doc,
+				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+				this,
+				false
+			);
+		walker.currentNode = aSelection.focusNode;
+
+		var selectionRange = aSelection.getRangeAt(0);
+
+		var node;
+		var nodeRange = doc.createRange();
+		while (node = walker.nextNode())
+		{
+			nodeRange.selectNode(node);
+			if (nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) == 0)
+				return node;
+		}
+		return null;
+	},
+ 
 	getLogicalLength : function(aString) 
 	{
 		var count = 0;
@@ -520,7 +550,7 @@ var RulerBar = {
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
 			aNode.localName.toLowerCase() == 'body');
 	},
-   
+  
 /* Prefs */ 
 	
 	get Prefs() 
