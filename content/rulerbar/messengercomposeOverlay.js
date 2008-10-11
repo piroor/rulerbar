@@ -452,7 +452,7 @@ var RulerBar = {
 	
 	countCharacters : function(aString) 
 	{
-		var count;
+		var count = 0;
 		var char;
 		for (var i = 0, maxi = aString.length; i < maxi; i++)
 		{
