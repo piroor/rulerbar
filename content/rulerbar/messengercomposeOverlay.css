@@ -34,7 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ruler-bar > *,
-.ruler-unit-box {
+.ruler-cell {
 	overflow: hidden;
 }
 
@@ -49,12 +49,12 @@
 	-moz-box-align: start;
 }
 
-.ruler-unit-box {
+.ruler-cell {
 	position: relative;
 	z-index: 200;
 }
 
-.ruler-unit-box.level3 {
+.ruler-cell.level3 {
 	height: 0.8em;
 	margin-bottom: 0.2em;
 	opacity: 0.6;
@@ -62,48 +62,49 @@
 	z-index: 500;
 }
 
-.ruler-unit-box.level2 {
+.ruler-cell.level2 {
 	height: 0.5em;
 	margin-bottom: 0.5em;
 	opacity: 0.4;
 	border-left: 1px solid;
 }
 
-.ruler-unit-box.level1 {
+.ruler-cell.level1 {
 	height: 0.4em;
 	margin-bottom: 0.6em;
 	opacity: 0.3;
 	border-left: 1px solid;
 }
 
-.ruler-unit-box.level0 {
+.ruler-cell.level0 {
 	height: 0.5em;
 	margin-bottom: 0.5em;
 }
 
-.ruler-unit-box.wrapLength {
+.ruler-cell.wrapLength {
 	height: 0.8em;
 	margin-bottom: 0.2em;
 	opacity: 0.75;
 	border-left: 2px solid;
 }
 
-.ruler-unit-box > label {
+.ruler-cell > label {
 	font-size: 80%;
-	margin: 0.1em 0 0 0.1em;
-	padding: 0;
+	margin: 0 0 0 2px;
+	padding: 0.1em 0 0 0.1em;
 	min-width: 0;
 	min-height: 0;
 }
 
-.ruler-unit-box[ruler-cursor-box="true"] {
+.ruler-cell[current="true"] {
 	height: 0.8em !important;
 	margin-bottom: 0.2em !important;
 	opacity: 1 !important;
 	border-left: 3px solid !important;
 }
 
-.ruler-unit-box[ruler-cursor-box="true"] > label {
+.ruler-cell[current="true"] > label {
 	opacity: 0.6;
+	margin-left: 0;
 }
 

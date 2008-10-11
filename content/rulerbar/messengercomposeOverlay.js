@@ -35,9 +35,9 @@
  
 var RulerBar = { 
 	
-	kBAR             : 'ruler-bar', 
-	kCURSOR          : 'ruler-cursor-box',
-	kRULER_UNIT_BOX  : 'ruler-unit-box',
+	kBAR        : 'ruler-bar', 
+	kCURSOR     : 'current',
+	kRULER_CELL : 'ruler-cell',
  
 /* properties */ 
 	
@@ -100,7 +100,9 @@ var RulerBar = {
 	{
 		var color = this.contentWindow.getComputedStyle(this.body, '').backgroundColor;
 		if (color == 'transparent')
-			color = this.getPref('browser.display.background_color');
+			color = this.getPref('browser.display.use_system_colors') ?
+				'-moz-Field' :
+				this.getPref('browser.display.background_color');
 		return color;
 	},
   
@@ -119,7 +121,7 @@ var RulerBar = {
  
 	get marks() 
 	{
-		return Array.slice(document.getElementsByAttribute(this.kRULER_UNIT_BOX, 'true'));
+		return Array.slice(document.getElementsByAttribute(this.kRULER_CELL, 'true'));
 	},
   
 	get frame() 
@@ -168,9 +170,7 @@ var RulerBar = {
 					aEvent.target == this.body &&
 					(aEvent.attrName == 'text' || aEvent.attrName == 'bgcolor')
 					) {
-					window.setTimeout(function(aSelf) {
-						aSelf.updateRulerAppearance();
-					}, 0, this);
+					this.updateRulerAppearanceWithDelay();
 				}
 				break;
 
@@ -296,7 +296,20 @@ var RulerBar = {
 			'background-color:'+this.backgroundColor+';'
 		);
 	},
- 
+	
+	updateRulerAppearanceWithDelay : function() 
+	{
+		if (this._updateRulerAppearanceWithDelayTimer) {
+			window.clearTimeout(this._updateRulerAppearanceWithDelayTimer);
+			this._updateRulerAppearanceWithDelayTimer = null;
+		}
+		this._updateRulerAppearanceWithDelayTimer = window.setTimeout(function(aSelf) {
+			aSelf.updateRulerAppearance();
+			aSelf._updateRulerAppearanceWithDelayTimer = null;
+		}, 0, this);
+	},
+	_updateRulerAppearanceWithDelayTimer : null,
+  
 	buildRulerMarks : function() 
 	{
 		var bar = this.bar;
@@ -322,11 +335,11 @@ var RulerBar = {
 			unit = document.createElement('vbox');
 			unit.setAttribute(
 				'class',
-				this.kRULER_UNIT_BOX+
+				this.kRULER_CELL+
 				' level'+level+
 				((wrapLength && i == wrapLength) ? ' wrapLength' : '')
 			);
-			unit.setAttribute(this.kRULER_UNIT_BOX, true);
+			unit.setAttribute(this.kRULER_CELL, true);
 			unit.setAttribute('style', 'width:'+size+'px');
 			unit.setAttribute('tooltiptext', i);
 			rulerBox.appendChild(unit);
@@ -655,8 +668,12 @@ var RulerBar = {
 		switch (aPrefName)
 		{
 			default:
-				if (aPrefName.indexOf('font.size.') == 0)
+				if (aPrefName.indexOf('font.size.') == 0) {
 					this.reset();
+				}
+				else if (aPrefName.indexOf('browser.display.') == 0) {
+					this.updateRulerAppearanceWithDelay();
+				}
 				return;
 
 			case 'mailnews.wraplength':
@@ -696,7 +713,10 @@ var RulerBar = {
 	domains : [
 		'extensions.rulerbar.',
 		'mailnews.wraplength',
-		'font.size.'
+		'font.size.',
+		'browser.display.foreground_color',
+		'browser.display.background_color',
+		'browser.display.use_system_colors'
 	]
   
 }; 
