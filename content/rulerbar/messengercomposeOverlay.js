@@ -155,6 +155,10 @@ var RulerBar = {
 				break;
 
 			case 'keypress':
+				this.lastKeyCode = aEvent.keyCode;
+				this.addSelectionListener();
+				break;
+
 			case 'click':
 				this.addSelectionListener();
 				break;
@@ -173,16 +177,17 @@ var RulerBar = {
 			case 'compose-window-close':
 				this.body.removeEventListener('DOMAttrModified', this, true);
 //				this.body.removeEventListener('DOMNodeInserted', this, true);
-				this._lastLength = 0;
 				break;
 		}
 	},
- 
+	
+	lastKeyCode : -1, 
+  
 /* selection */ 
 	
 	notifySelectionChanged : function(aDocument, aSelection, aReason) 
 	{
-		this.updateCursor();
+		this.updateCursor(aReason);
 	},
  
 	addSelectionListener : function() 
@@ -192,8 +197,6 @@ var RulerBar = {
 			.selection
 			.QueryInterface(Components.interfaces.nsISelectionPrivate)
 			.addSelectionListener(this);
-		this.frame.addEventListener('keypress', this, false);
-		this.frame.addEventListener('click', this, false);
 		this._listening = true;
 	},
 	_listening : false,
@@ -260,6 +263,8 @@ var RulerBar = {
 	{
 		window.removeEventListener('unload', this, false);
 		document.documentElement.removeEventListener('compose-window-close', this, false);
+		this.frame.addEventListener('keypress', this, false);
+		this.frame.addEventListener('click', this, false);
 		this.removePrefListener();
 		this.removeSelectionListener();
 	},
@@ -348,17 +353,13 @@ var RulerBar = {
 		}, this);
 	},
  
-	updateCursor : function() 
+	updateCursor : function(aReason) 
 	{
 		if (this._updating || !this.editor) return;
 
 		this._updating = true;
 
-		var editor = this.editor;
-		this._lastLength = editor.textLength;
-
 		var lastPos = 0;
-
 		var cursor = this.cursor;
 		var marks = this.marks;
 		if (cursor) {
@@ -366,83 +367,36 @@ var RulerBar = {
 			cursor.removeAttribute(this.kCURSOR);
 		}
 
-		var pos = 0;
-		var tabWidth = this.tabWidth;
-		var nonAsciiWidth = this.nonAsciiWidth
+		var line = this.getCurrentLine(this.editor.selection);
+		var pos = line.leftCount;
+		var rest = line.rightCount;
+
 		var wrapLength = this.wrapLength;
-
-		var sel = editor.selection;
-		var node = sel.focusNode;
-		var line = node.nodeValue || '';
-		var offset = sel.focusOffset;
-
-		var walker = node.ownerDocument.createTreeWalker(
-				this.body,
-				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-				this,
-				false
-			);
-		walker.currentNode = node;
-
-		var part;
-		while (
-			(node = walker.previousNode()) &&
-			!this.isBody(node) &&
-			!this.isBR(node)
-			)
-		{
-			part = node.nodeValue || '' ;
-			line += part;
-			offset += part.length;
-		}
-
-		if (line) {
-			var char;
-			for (var i = 0, maxi = offset; i < maxi; i++)
-			{
-				char = line.charCodeAt(i);
-				switch (char)
-				{
-					case 9: // Tab
-						pos += tabWidth;
-						break;
-
-					case 10:
-					case 13:
-						pos = 0;
-						break;
-
-					default:
-						if (char >=  0 && char <= 127) {
-							pos++;
-						}
-						else {
-							pos += nonAsciiWidth;
-						}
-						break;
-				}
-			}
-		}
-
 		if (
 			this.shouldRoop &&
 			wrapLength > 0 &&
 			pos > wrapLength
 			) {
-			var newPos = pos % wrapLength;
+			pos = pos % wrapLength;
+		}
+
 /*
-			if (!newPos) {
-				var fromLeftHalf = lastPos < (wrapLength / 2);
-				if (newPos == lastPos) {
-					newPos = fromLeftHalf ? wrapLength : 0 ;
+		const nsIDOMKeyEvents = Components.interfaces.nsIDOMKeyEvents;
+		const nsISelectionListener = Components.interfaces.nsISelectionListener;
+		if (
+			aReason &&
+			aReason & nsISelectionListener.KEYPRESS_REASON &&
+			!(aReason & nsISelectionListener.SELECTALL_REASON)
+			) {
+			if (this.lastKeyCode == nsIDOMKeyEvents.DOM_VK_LEFT) {
+				if (lastPos != 0) {
+					pos =
 				}
 				else {
-					newPos = fromLeftHalf ? 0 : wrapLength ;
 				}
 			}
-*/
-			pos = newPos;
 		}
+*/
 
 		if (pos in marks)
 			marks[pos].setAttribute(this.kCURSOR, true);
@@ -450,15 +404,79 @@ var RulerBar = {
 		this._updating = false;
 	},
 	_updating : false,
-	_lastLength : 0,
 	
+	getCurrentLine : function(aSelection) 
+	{
+		var node = aSelection.focusNode;
+		var left = (node.nodeValue || '').substring(0, aSelection.focusOffset);
+		var right = (node.nodeValue || '').substring(aSelection.focusOffset+1);
+
+		var walker = node.ownerDocument.createTreeWalker(
+				node.ownerDocument,
+				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+				this,
+				false
+			);
+
+		walker.currentNode = aSelection.focusNode;
+		while (
+			(node = walker.previousNode()) &&
+			!this.isBody(node) &&
+			!this.isBR(node)
+			)
+		{
+			left = (node.nodeValue || '') + left;
+		}
+		left = left.split(/[\n\r]+/);
+		left = left[left.length-1];
+
+		walker.currentNode = aSelection.focusNode;
+		while (
+			(node = walker.nextNode()) &&
+			!this.isBody(node) &&
+			!this.isBR(node)
+			)
+		{
+			right += (node.nodeValue || '');
+		}
+		right = right.split(/[\n\r]+/);
+		right = right[0];
+
+		return {
+			left       : left,
+			leftCount  : this.countCharacters(left),
+			right      : right,
+			rightCount : this.countCharacters(right)
+		};
+	},
+	
+	countCharcters : function(aString) 
+	{
+		var count;
+		var char;
+		for (var i = 0, maxi = aString.length; i < maxi; i++)
+		{
+			char = aString.charCodeAt(i);
+			if (char == 9) { // Tab
+				count += this.tabWidth;
+			}
+			else if (char >=  0 && char <= 127) { // ASCII
+				count++;
+			}
+			else {
+				count += this.nonAsciiWidth;
+			}
+		}
+		return count;
+	},
+  
 	acceptNode : function(aNode) 
 	{
 		return this.isBR(aNode) || this.isBody(aNode) ?
 			NodeFilter.FILTER_ACCEPT :
 			NodeFilter.FILTER_SKIP ;
 	},
-   
+ 
 	isBR : function(aNode) 
 	{
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
@@ -470,7 +488,7 @@ var RulerBar = {
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
 			aNode.localName.toLowerCase() == 'body');
 	},
- 
+   
 /* Prefs */ 
 	
 	get Prefs() 
