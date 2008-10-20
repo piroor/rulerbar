@@ -538,7 +538,12 @@ var RulerBar = {
 			aLine.leftCount = leftCount;
 			// ëSäpï∂éöÇ≈ê‹ÇËï‘Ç≥ÇÍÇΩèÍçá
 			if (aLine.leftCount % 2 != this.getLogicalLength(aLine.left) % 2) {
-				aLine.leftCount = Math.min(aLine.leftCount+1, wrapLength-1);
+				if (aLine.leftCount == wrapLength) {
+					aLine.leftCount = wrapLength-1;
+				}
+				else {
+					aLine.leftCount++;
+				}
 			}
 		}
 
