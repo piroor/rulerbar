@@ -53,6 +53,7 @@ var RulerBar = {
 	columnLevel3 : 20,
 	columnLevel1 : 2,
 	scale : 100,
+	preventWrapLineEndPattern : null,
  
 	get wrapLength() 
 	{
@@ -255,6 +256,7 @@ var RulerBar = {
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level3');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level1');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.scale');
+		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.preventwrap.lineend');
 	},
 	
 	overrideStartupMethod : function() 
@@ -536,8 +538,14 @@ var RulerBar = {
 			}
 			aLine.left = newLeft;
 			aLine.leftCount = leftCount;
-			// ëSäpï∂éöÇ≈ê‹ÇËï‘Ç≥ÇÍÇΩèÍçá
-			if (aLine.leftCount % 2 != this.getLogicalLength(aLine.left) % 2) {
+			/*
+			var match;
+			if (this.preventWrapLineEndPattern && (match = aLine.left.match(this.preventWrapLineEndPattern))) {
+				aLine.left = match[0];
+				aLine.leftCount = this.getLogicalLength(aLine.left);
+			}
+			else */
+			if (aLine.leftCount % 2 != this.getLogicalLength(aLine.left) % 2) { // ëSäpï∂éöÇ≈ê‹ÇËï‘Ç≥ÇÍÇΩèÍçá
 				if (aLine.leftCount == wrapLength) {
 					aLine.leftCount = wrapLength-1;
 				}
@@ -789,6 +797,10 @@ var RulerBar = {
 
 			case 'extensions.rulerbar.scale':
 				this.scale = value;
+				break;
+
+			case 'extensions.rulerbar.preventwrap.lineend':
+				this.preventWrapLineEndPattern = new RegExp('['+value.replace(/([\[\]\(\)\-\^\\])/g, '\\$1')+']+$');
 				break;
 		}
 		if (this.bar) this.reset();
