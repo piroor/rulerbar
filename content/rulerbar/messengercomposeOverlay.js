@@ -509,8 +509,10 @@ var RulerBar = {
 	processWrap : function(aLine) 
 	{
 		var wrapLength = this.wrapLength;
-		if (!this.shouldRoop || wrapLength <= 0)
+		if (!this.shouldRoop || wrapLength <= 0) {
+			this.lastPosition = this.calculateNewPosition(aLine);
 			return aLine;
+		}
 
 		var leftCount = aLine.leftCount;
 		if (leftCount > wrapLength) {
@@ -548,7 +550,7 @@ var RulerBar = {
 	
 	calculateNewPosition : function(aLine) 
 	{
-		if (aLine.leftCount != this.wrapLength) {
+		if (!this.shouldRoop || aLine.leftCount != this.wrapLength) {
 			return this.isBR(aLine.focusNode) ? this.kLINE_TOP :
 				!aLine.leftCount ? this.kLINE_TOP :
 				!aLine.rightCount ? this.kLINE_END :
