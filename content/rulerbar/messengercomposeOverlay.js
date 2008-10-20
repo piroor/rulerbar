@@ -57,7 +57,7 @@ var RulerBar = {
 	get wrapLength() 
 	{
 		var editor = this.editor;
-		return (editor && !editor.wrapWidth) ? 0 :
+		return (editor && !editor.wrapWidth && !this.bodyWidth) ? 0 :
 			this._wrapLength ;
 	},
 	_wrapLength : 0,
@@ -94,6 +94,15 @@ var RulerBar = {
 		});
 
 		return offset;
+	},
+ 
+	get bodyWidth() 
+	{
+		var value = this.body.style.width;
+		if (!value) return 0;
+		var match = value.match(/^(\d+)ch$/i);
+		if (match) return parseInt(match[1]);
+		return 0;
 	},
  
 	get color() 
