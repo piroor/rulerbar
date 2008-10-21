@@ -96,7 +96,8 @@
 	min-height: 0;
 }
 
-.ruler-cell[current="true"] {
+.ruler-cell[current="true"],
+#ruler-cursorbar-cursor {
 	height: 0.8em !important;
 	margin-bottom: 0.2em !important;
 	opacity: 1 !important;
@@ -107,4 +108,3 @@
 	opacity: 0.6;
 	margin-left: 0;
 }
-

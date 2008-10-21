@@ -41,6 +41,9 @@
 
 <prefpane id="prefpane-general">
 	<preferences>
+		<preference id="extensions.rulerbar.physicalPositioning"
+			name="extensions.rulerbar.physicalPositioning"
+			type="bool"/>
 		<preference id="extensions.rulerbar.shouldRoop"
 			name="extensions.rulerbar.shouldRoop"
 			type="bool"/>
@@ -54,6 +57,10 @@
 			name="extensions.rulerbar.scale"
 			type="int"/>
 	</preferences>
+
+	<checkbox id="extensions.rulerbar.physicalPositioning-check"
+		label="&config.physicalPositioning;"
+		preference="extensions.rulerbar.physicalPositioning"/>
 
 	<checkbox id="extensions.rulerbar.shouldRoop-check"
 		label="&config.shouldRoop;"

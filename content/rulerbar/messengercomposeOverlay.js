@@ -35,9 +35,14 @@
  
 var RulerBar = { 
 	
-	kBAR        : 'ruler-bar', 
-	kCURSOR     : 'current',
+	kBAR    : 'ruler-bar', 
+	kCURSOR : 'current',
+
+	kSCALEBAR   : 'ruler-scalebar',
 	kRULER_CELL : 'ruler-cell',
+
+	kCURSORBAR            : 'ruler-cursorbar',
+	kCURSORBAR_POSITIONER : 'ruler-cursorbar-positioner',
 
 	kLINE_TOP : 1,
 	kLINE_END : 2,
@@ -53,7 +58,6 @@ var RulerBar = {
 	columnLevel3 : 20,
 	columnLevel1 : 2,
 	scale : 100,
-	preventWrapLineEndPattern : null,
  
 	get wrapLength() 
 	{
@@ -62,11 +66,26 @@ var RulerBar = {
 			this._wrapLength ;
 	},
 	_wrapLength : 0,
+	
+	get bodyWidth() 
+	{
+		var value = this.contentBody.style.width;
+		if (!value) return 0;
+		var match = value.match(/^(\d+)ch$/i);
+		if (match) return parseInt(match[1]);
+		return 0;
+	},
+  
+	get fontFamily() 
+	{
+		var w = this.frame.contentWindow;
+		return w.getComputedStyle(this.contentBody, '').fontFamily;
+	},
  
 	get fontSize() 
 	{
-		var w = this.contentWindow;
-		var d = w.document;
+		var w = this.frame.contentWindow;
+		var d = this.frame.contentDocument;
 		var size = w.getComputedStyle(d.documentElement, '').fontSize;
 		size = parseInt(size.match(/^\d+/));
 		var scale = Math.max(1, this.scale);
@@ -75,8 +94,8 @@ var RulerBar = {
  
 	get offset() 
 	{
-		var w = this.contentWindow;
-		var d = w.document;
+		var w = this.frame.contentWindow;
+		var d = this.frame.contentDocument;
 		var targets = [];
 
 		var root = w.getComputedStyle(d.documentElement, '');
@@ -84,7 +103,7 @@ var RulerBar = {
 		targets.push(root.marginLeft);
 		targets.push(root.paddingLeft);
 
-		var body = w.getComputedStyle(this.body, '');
+		var body = w.getComputedStyle(this.contentBody, '');
 		targets.push(body.borderLeftWidth);
 		targets.push(body.marginLeft);
 		targets.push(body.paddingLeft);
@@ -97,23 +116,14 @@ var RulerBar = {
 		return offset;
 	},
  
-	get bodyWidth() 
-	{
-		var value = this.body.style.width;
-		if (!value) return 0;
-		var match = value.match(/^(\d+)ch$/i);
-		if (match) return parseInt(match[1]);
-		return 0;
-	},
- 
 	get color() 
 	{
-		return this.contentWindow.getComputedStyle(this.body, '').color;
+		return this.frame.contentWindow.getComputedStyle(this.contentBody, '').color;
 	},
  
 	get backgroundColor() 
 	{
-		var color = this.contentWindow.getComputedStyle(this.body, '').backgroundColor;
+		var color = this.frame.contentWindow.getComputedStyle(this.contentBody, '').backgroundColor;
 		if (color == 'transparent')
 			color = this.getPref('browser.display.use_system_colors') ?
 				'-moz-Field' :
@@ -127,6 +137,11 @@ var RulerBar = {
 	{
 		return document.getElementById(this.kBAR);
 	},
+ 
+	get scaleBar() 
+	{
+		return document.getElementById(this.kSCALEBAR);
+	},
 	
 	get cursor() 
 	{
@@ -139,26 +154,31 @@ var RulerBar = {
 		return Array.slice(document.getElementsByAttribute(this.kRULER_CELL, 'true'));
 	},
   
+	get cursorPositioner() 
+	{
+		return document.getElementById(this.kCURSORBAR_POSITIONER);
+	},
+ 
 	get frame() 
 	{
 		return document.getElementById('content-frame');
 	},
 	
-	get contentWindow() 
-	{
-		return this.frame.contentWindow;
-	},
- 
 	get editor() 
 	{
 		return GetCurrentEditor();
 	},
  
-	get body() 
+	get contentBody() 
 	{
-		return this.contentWindow.document.getElementsByTagName('body')[0];
+		return this.frame.contentDocument.body;
 	},
-   
+  
+	get calculator() 
+	{
+		return document.getElementById('rulerbar-calculator-frame');
+	},
+  
 	handleEvent : function(aEvent) 
 	{
 		switch (aEvent.type)
@@ -185,7 +205,7 @@ var RulerBar = {
 
 			case 'DOMAttrModified':
 				if (
-					aEvent.target == this.body &&
+					aEvent.target == this.contentBody &&
 					(aEvent.attrName == 'text' || aEvent.attrName == 'bgcolor')
 					) {
 					this.updateRulerAppearanceWithDelay();
@@ -193,8 +213,8 @@ var RulerBar = {
 				break;
 
 			case 'compose-window-close':
-				this.body.removeEventListener('DOMAttrModified', this, true);
-//				this.body.removeEventListener('DOMNodeInserted', this, true);
+				this.contentBody.removeEventListener('DOMAttrModified', this, true);
+//				this.contentBody.removeEventListener('DOMNodeInserted', this, true);
 				break;
 		}
 	},
@@ -256,30 +276,22 @@ var RulerBar = {
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level3');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level1');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.scale');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.preventwrap.lineend');
 	},
 	
 	overrideStartupMethod : function() 
 	{
 		eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
 			'{',
-			'{ RulerBar.delayedInit(); RulerBar.reset();'
+			'{ RulerBar.delayedInit();'
 		));
-	},
- 
-	reset : function() 
-	{
-		if (this.bar) {
-			this.bar.parentNode.removeChild(this.bar);
-		}
-		this.createRuler();
 	},
  
 	delayedInit : function() 
 	{
+		this.initRuler();
 		window.setTimeout(function(aSelf) {
-			aSelf.body.addEventListener('DOMAttrModified', aSelf, true);
-//			aSelf.body.addEventListener('DOMNodeInserted', aSelf, true);
+			aSelf.contentBody.addEventListener('DOMAttrModified', aSelf, true);
+//			aSelf.contentBody.addEventListener('DOMNodeInserted', aSelf, true);
 		}, 0, this);
 	},
   
@@ -294,17 +306,16 @@ var RulerBar = {
 		this.removeSelectionListener();
 	},
   
-	createRuler : function() 
+	initRuler : function() 
 	{
-		var bar = document.createElement('stack');
-		bar.setAttribute('id', this.kBAR);
-		this.updateRulerAppearance(bar);
-
-		var frame = this.frame;
-		frame.parentNode.insertBefore(bar, frame);
-
+		var range = document.createRange();
+		range.selectNodeContents(this.scaleBar);
+		range.deleteContents();
+		range.detach();
+		this.updateRulerAppearance();
 		if (this._createTimer) return;
 		this._createTimer = window.setTimeout(function(aSelf) {
+			aSelf.calculator.style.visibility = 'hidden';
 			aSelf.buildRulerMarks();
 			aSelf.updateOffset();
 			aSelf.updateCursor();
@@ -312,9 +323,9 @@ var RulerBar = {
 		}, 0, this);
 	},
 	
-	updateRulerAppearance : function(aBar) 
+	updateRulerAppearance : function() 
 	{
-		(aBar || this.bar).setAttribute(
+		this.bar.setAttribute(
 			'style',
 			'font-size:'+this.fontSize+'px;'+
 			'color:'+this.color+';'+
@@ -337,8 +348,7 @@ var RulerBar = {
   
 	buildRulerMarks : function() 
 	{
-		var bar = this.bar;
-		var rulerBox = document.createElement('hbox');
+		var rulerBox = this.scaleBar;
 
 		var fontSize = this.fontSize;
 		var size = parseInt(fontSize / 2);
@@ -379,15 +389,13 @@ var RulerBar = {
 				);
 			}
 		}
-
-		bar.appendChild(rulerBox);
 	},
  
 	updateOffset : function() 
 	{
 		var offset = this.offset;
 		Array.slice(this.bar.childNodes).forEach(function(aNode) {
-			aNode.setAttribute('style', 'margin-left:'+offset+'px');
+			aNode.style.marginLeft = offset+'px';
 		}, this);
 	},
   
@@ -407,18 +415,29 @@ var RulerBar = {
 		}
 
 		var line = this.getCurrentLine(this.editor.selection);
-		var pos = (this.lastPosition == this.kLINE_TOP) ? 0 : line.leftCount ;
-		if (pos in marks)
-			marks[pos].setAttribute(this.kCURSOR, true);
+		if ('physicalPosition' in line) {
+			this.cursorPositioner.setAttribute('style', 'width:'+line.physicalPosition+'px');
+		}
+		else {
+			var pos = (this.lastPosition == this.kLINE_TOP) ? 0 : line.leftCount ;
+			if (pos in marks)
+				marks[pos].setAttribute(this.kCURSOR, true);
+		}
 
 		this._updating = false;
 	},
 	_updating : false,
 	lastReason : -1,
-
 	
 	getCurrentLine : function(aSelection) 
 	{
+		var physical = this.getPref('extensions.rulerbar.physicalPositioning');
+		if (physical) {
+			this.updateCalculator();
+			var doc = this.calculator.contentDocument;
+			var fragment = doc.createDocumentFragment();
+		}
+
 		var node = aSelection.focusNode;
 		var offset = aSelection.focusOffset;
 		if (node.nodeType != Node.TEXT_NODE) {
@@ -429,6 +448,13 @@ var RulerBar = {
 
 		var left = (node.nodeValue || '').substring(0, offset);
 		var right = (node.nodeValue || '').substring(offset);
+
+		if (physical) {
+			fragment.appendChild(doc.importNode(node, true));
+			if (focusNode.nodeType == Node.TEXT_NODE) {
+				fragment.lastChild.nodeValue = left;
+			}
+		}
 
 		var walker = node.ownerDocument.createTreeWalker(
 				node.ownerDocument,
@@ -445,9 +471,21 @@ var RulerBar = {
 			)
 		{
 			left = (node.nodeValue || '') + left;
+			if (physical) {
+				fragment.insertBefore(doc.importNode(node, true), fragment.lastChild);
+			}
 		}
 		left = left.split(/[\n\r]+/);
 		left = left[left.length-1];
+
+		if (physical) {
+			var marker = doc.createElement('span');
+			fragment.appendChild(marker);
+
+			if (focusNode.nodeType == Node.TEXT_NODE) {
+				fragment.appendChild(doc.createTextNode(right));
+			}
+		}
 
 		walker.currentNode = focusNode;
 		while (
@@ -457,19 +495,51 @@ var RulerBar = {
 			)
 		{
 			right += (node.nodeValue || '');
+			if (physical) {
+				fragment.appendChild(doc.importNode(node, true));
+			}
 		}
 		right = right.split(/[\n\r]+/);
 		right = right[0];
 
-		return this.processWrap({
-			focusNode  : focusNode,
-			left       : left,
-			leftCount  : this.getLogicalLength(left),
-			right      : right,
-			rightCount : this.getLogicalLength(right),
-		});
+		if (physical) {
+			var cRange = doc.createRange();
+			cRange.selectNodeContents(doc.body);
+			cRange.deleteContents();
+			cRange.insertNode(fragment);
+			cRange.detach();
+		}
+
+		var line = {
+				focusNode  : focusNode,
+				left       : left,
+				leftCount  : this.getLogicalLength(left),
+				right      : right,
+				rightCount : this.getLogicalLength(right)
+			};
+
+		if (physical) {
+			line.physicalPosition = doc.getBoxObjectFor(marker).screenX - doc.getBoxObjectFor(doc.body).screenX;
+		}
+
+		return this.processWrap(line);
 	},
 	
+	updateCalculator : function() 
+	{
+		if (!this.calculator.contentDocument ||
+			!this.calculator.contentDocument.body) return;
+
+		var calculatorStyle = this.calculator.contentDocument.body.style;
+		calculatorStyle.margin = 0;
+		calculatorStyle.padding = 0;
+		calculatorStyle.fontSize = this.fontSize+'px';
+		calculatorStyle.fontFamily = this.fontFamily;
+		var wrapLength = this.wrapLength;
+		calculatorStyle.width = wrapLength ? wrapLength+'ch' : 'auto';
+		calculatorStyle.whiteSpace = '-moz-pre-wrap';
+	},
+ 
 	getPreviousNodeFromSelection : function(aSelection) 
 	{
 		var doc = aSelection.focusNode.ownerDocument;
@@ -519,6 +589,8 @@ var RulerBar = {
   
 	processWrap : function(aLine) 
 	{
+		if ('physicalPosition' in aLine) return aLine;
+
 		var wrapLength = this.wrapLength;
 		if (!this.shouldRoop || wrapLength <= 0) {
 			this.lastPosition = this.calculateNewPosition(aLine);
@@ -538,13 +610,6 @@ var RulerBar = {
 			}
 			aLine.left = newLeft;
 			aLine.leftCount = leftCount;
-			/*
-			var match;
-			if (this.preventWrapLineEndPattern && (match = aLine.left.match(this.preventWrapLineEndPattern))) {
-				aLine.left = match[0];
-				aLine.leftCount = this.getLogicalLength(aLine.left);
-			}
-			else */
 			if (aLine.leftCount % 2 != this.getLogicalLength(aLine.left) % 2) { // ‘SŠp•¶Žš‚ÅÜ‚è•Ô‚³‚ê‚½ê‡
 				if (aLine.leftCount == wrapLength) {
 					aLine.leftCount = wrapLength-1;
@@ -595,7 +660,7 @@ var RulerBar = {
 				reason & nsISelectionListener.MOUSEUP_REASON
 			)
 			) {
-			var bodyBox = this.contentWindow.document.getBoxObjectFor(this.body);
+			var bodyBox = this.frame.contentDocument.getBoxObjectFor(this.contentBody);
 			onTop = this.lastClickedScreenX < bodyBox.screenX + (bodyBox.width / 3);
 		}
 		else if (
@@ -760,7 +825,7 @@ var RulerBar = {
 		{
 			default:
 				if (aPrefName.indexOf('font.size.') == 0) {
-					this.reset();
+					this.initRuler();
 				}
 				else if (aPrefName.indexOf('browser.display.') == 0) {
 					this.updateRulerAppearanceWithDelay();
@@ -798,12 +863,8 @@ var RulerBar = {
 			case 'extensions.rulerbar.scale':
 				this.scale = value;
 				break;
-
-			case 'extensions.rulerbar.preventwrap.lineend':
-				this.preventWrapLineEndPattern = new RegExp('['+value.replace(/([\[\]\(\)\-\^\\])/g, '\\$1')+']+$');
-				break;
 		}
-		if (this.bar) this.reset();
+		this.initRuler();
 	},
 	domains : [
 		'extensions.rulerbar.',

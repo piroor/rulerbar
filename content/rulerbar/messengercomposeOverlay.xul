@@ -37,4 +37,16 @@
 <?xml-stylesheet type="text/css" href="chrome://rulerbar-platform/content/rulerbar.css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/messengercomposeOverlay.js"/>
+<vbox id="appcontent">
+	<stack id="ruler-bar" insertbefore="content-frame">
+		<browser id="rulerbar-calculator-frame"
+			type="content"/>
+		<hbox id="ruler-cursorbar">
+			<spacer id="ruler-cursorbar-positioner"/>
+			<spacer id="ruler-cursorbar-cursor"/>
+			<spacer id="ruler-cursorbar-padding" flex="1"/>
+		</hbox>
+		<hbox id="ruler-scalebar"/>
+	</stack>
+</vbox>
 </overlay>
