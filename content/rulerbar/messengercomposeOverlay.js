@@ -192,12 +192,10 @@ var RulerBar = {
 				break;
 
 			case 'keypress':
-				this.addSelectionListener();
 				this.lastKeyCode = aEvent.keyCode;
 				break;
 
 			case 'click':
-				this.addSelectionListener();
 			case 'dragover':
 				this.lastClickedScreenX = aEvent.screenX;
 				this.lastClickedScreenY = aEvent.screenY;
@@ -234,6 +232,12 @@ var RulerBar = {
  
 	addSelectionListener : function() 
 	{
+		if (!this.editor) {
+			window.setTimeout(function(aSelf) {
+				aSelf.addSelectionListener();
+			}, 10, this);
+			return;
+		}
 		if (this._listening) return;
 		this.editor
 			.selection
@@ -290,6 +294,7 @@ var RulerBar = {
 	{
 		this.initRuler();
 		window.setTimeout(function(aSelf) {
+			aSelf.addSelectionListener();
 			aSelf.contentBody.addEventListener('DOMAttrModified', aSelf, true);
 //			aSelf.contentBody.addEventListener('DOMNodeInserted', aSelf, true);
 		}, 0, this);
