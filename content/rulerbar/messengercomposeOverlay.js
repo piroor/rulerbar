@@ -450,14 +450,19 @@ var RulerBar = {
 		var offset = aSelection.focusOffset;
 		if (node.nodeType != Node.TEXT_NODE) {
 			node = this.getPreviousNodeFromSelection(aSelection) || node;
-			offset = node.nodeType == Node.TEXT_NODE ? node.nodeValue.length : 0 ;
+			offset = (node.nodeType == Node.TEXT_NODE) ? node.nodeValue.length : 0 ;
 		}
 		var focusNode = node;
 
 		leftRange.selectNode(node);
-		leftRange.setEnd(node, offset);
 		rightRange.selectNode(node);
-		rightRange.setStart(node, (node.nodeValue || '').length - offset);
+		if (node.nodeType == Node.TEXT_NODE) {
+			leftRange.setEnd(node, offset);
+			rightRange.setStart(node, (node.nodeValue || '').length - offset);
+		}
+		else {
+			rightRange.collapse(false);
+		}
 
 		var walker = node.ownerDocument.createTreeWalker(
 				node.ownerDocument,
@@ -474,12 +479,6 @@ var RulerBar = {
 			)
 		{
 			leftRange.setStartBefore(node);
-			if (node.nodeType != Node.TEXT_NODE ||
-				!/[\n\r]/.test(node.nodeValue))
-				continue;
-			let left = node.nodeValue.split(/[\n\r]+/);
-			leftRange.setStart(node, node.nodeValue.length - left[left.length-1].length);
-			break;
 		}
 
 		walker.currentNode = focusNode;
@@ -490,12 +489,6 @@ var RulerBar = {
 			)
 		{
 			rightRange.setEndAfter(node);
-			if (node.nodeType != Node.TEXT_NODE ||
-				!/[\n\r]/.test(node.nodeValue))
-				continue;
-			let right = node.nodeValue.split(/[\n\r]+/);
-			rightRange.setEnd(node, right[0].length);
-			break;
 		}
 
 		var left  = leftRange.toString();
@@ -551,7 +544,9 @@ var RulerBar = {
 		calculatorStyle.width = wrapLength ?
 				wrapLength+'ch' :
 				d.getBoxObjectFor(b).width+'px' ;
-		calculatorStyle.whiteSpace = '-moz-pre-wrap';
+		calculatorStyle.whiteSpace = wrapLength ?
+				'-moz-pre-wrap' :
+				'normal' ;
 	},
  
 	getPreviousNodeFromSelection : function(aSelection) 
