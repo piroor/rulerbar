@@ -522,12 +522,14 @@ var RulerBar = {
 			this.updateCalculator();
 
 			var doc = this.calculator.contentDocument;
-			var marker = doc.createElement('span');
+			var startMarker = doc.createElement('span');
+			var endMarker = doc.createElement('span');
 
 			var fragment = doc.createDocumentFragment();
+			fragment.appendChild(startMarker);
 			if (!leftRange.collapsed)
 				fragment.appendChild(doc.importNode(leftRange.cloneContents(), true));
-			fragment.appendChild(marker);
+			fragment.appendChild(endMarker);
 			if (!rightRange.collapsed)
 				fragment.appendChild(doc.importNode(rightRange.cloneContents(), true));
 
@@ -537,7 +539,7 @@ var RulerBar = {
 			cRange.insertNode(fragment);
 			cRange.detach();
 
-			line.physicalPosition = doc.getBoxObjectFor(marker).screenX - doc.getBoxObjectFor(doc.body).screenX;
+			line.physicalPosition = doc.getBoxObjectFor(endMarker).screenX - doc.getBoxObjectFor(startMarker).screenX;
 		}
 
 		return this.processWrap(line);
