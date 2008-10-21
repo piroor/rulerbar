@@ -418,22 +418,27 @@ var RulerBar = {
 		this._updating = true;
 		this.lastReason = aReason || 0 ;
 
-		var lastPos = 0;
-		var cursor = this.cursor;
-		var marks = this.marks;
-		if (cursor) {
-			lastPos = marks.indexOf(cursor);
-			cursor.removeAttribute(this.kCURSOR);
-		}
+		try {
+			var lastPos = 0;
+			var cursor = this.cursor;
+			var marks = this.marks;
+			if (cursor) {
+				lastPos = marks.indexOf(cursor);
+				cursor.removeAttribute(this.kCURSOR);
+			}
 
-		var line = this.getCurrentLine(this.editor.selection);
-		if ('physicalPosition' in line) {
-			this.cursorPositioner.setAttribute('style', 'width:'+line.physicalPosition+'px');
+			var line = this.getCurrentLine(this.editor.selection);
+			if ('physicalPosition' in line) {
+				this.cursorPositioner.setAttribute('style', 'width:'+line.physicalPosition+'px');
+			}
+			else {
+				var pos = (this.lastPosition == this.kLINE_TOP) ? 0 : line.leftCount ;
+				if (pos in marks)
+					marks[pos].setAttribute(this.kCURSOR, true);
+			}
 		}
-		else {
-			var pos = (this.lastPosition == this.kLINE_TOP) ? 0 : line.leftCount ;
-			if (pos in marks)
-				marks[pos].setAttribute(this.kCURSOR, true);
+		catch(e) {
+			dump(e+'\n');
 		}
 
 		this._updating = false;
@@ -485,7 +490,8 @@ var RulerBar = {
 		while (
 			(node = walker.previousNode()) &&
 			!this.isBody(node) &&
-			!this.isBR(node)
+			!this.isBR(node) &&
+			!this.isBlock(node)
 			)
 		{
 			leftRange.setStartBefore(node);
@@ -495,7 +501,8 @@ var RulerBar = {
 		while (
 			(node = walker.nextNode()) &&
 			!this.isBody(node) &&
-			!this.isBR(node)
+			!this.isBR(node) &&
+			!this.isBlock(node)
 			)
 		{
 			rightRange.setEndAfter(node);
@@ -722,7 +729,7 @@ var RulerBar = {
    
 	acceptNode : function(aNode) 
 	{
-		return this.isBR(aNode) || this.isBody(aNode) ?
+		return (this.isBR(aNode) || this.isBody(aNode)) && !this.isBlock(aNode) ?
 			NodeFilter.FILTER_ACCEPT :
 			NodeFilter.FILTER_SKIP ;
 	},
@@ -737,6 +744,12 @@ var RulerBar = {
 	{
 		return (aNode.nodeType == Node.ELEMENT_NODE &&
 			aNode.localName.toLowerCase() == 'body');
+	},
+ 
+	isBlock : function(aNode) 
+	{
+		return (aNode.nodeType == Node.ELEMENT_NODE &&
+			/^(p|ol|ul|li|dl|dt|dd|td|th|caption|div|pre|address|h[1-6])$/i.test(aNode.localName));
 	},
   
 /* Prefs */ 
