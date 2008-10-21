@@ -58,6 +58,7 @@ var RulerBar = {
 	columnLevel3 : 20,
 	columnLevel1 : 2,
 	scale : 100,
+	physical : false,
  
 	get wrapLength() 
 	{
@@ -154,6 +155,11 @@ var RulerBar = {
 		return Array.slice(document.getElementsByAttribute(this.kRULER_CELL, 'true'));
 	},
   
+	get cursorBar() 
+	{
+		return document.getElementById(this.kCURSORBAR);
+	},
+ 
 	get cursorPositioner() 
 	{
 		return document.getElementById(this.kCURSORBAR_POSITIONER);
@@ -280,6 +286,7 @@ var RulerBar = {
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level3');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level1');
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.scale');
+		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.physicalPositioning');
 	},
 	
 	overrideStartupMethod : function() 
@@ -436,8 +443,6 @@ var RulerBar = {
 	
 	getCurrentLine : function(aSelection) 
 	{
-		var physical = this.getPref('extensions.rulerbar.physicalPositioning');
-
 		if (!aSelection.rangeCount) {
 			var line = {
 				left       : '',
@@ -445,7 +450,7 @@ var RulerBar = {
 				right      : '',
 				rightCount : 0
 			};
-			if (physical) line.physicalPosition = 0;
+			if (this.physical) line.physicalPosition = 0;
 			return line;
 		}
 
@@ -506,7 +511,7 @@ var RulerBar = {
 				rightCount : this.getLogicalLength(right)
 			};
 
-		if (physical) {
+		if (this.physical) {
 			this.updateCalculator();
 
 			var doc = this.calculator.contentDocument;
@@ -876,6 +881,11 @@ var RulerBar = {
 
 			case 'extensions.rulerbar.scale':
 				this.scale = value;
+				break;
+
+			case 'extensions.rulerbar.physicalPositioning':
+				this.physical = value;
+				this.cursorBar.hidden = !value;
 				break;
 		}
 		this.initRuler();
