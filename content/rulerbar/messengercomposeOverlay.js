@@ -538,13 +538,19 @@ var RulerBar = {
 		if (!this.calculator.contentDocument ||
 			!this.calculator.contentDocument.body) return;
 
+		var w = this.frame.contentWindow;
+		var d = this.frame.contentDocument;
+		var b = this.contentBody;
+
 		var calculatorStyle = this.calculator.contentDocument.body.style;
-		calculatorStyle.margin = 0;
-		calculatorStyle.padding = 0;
+		calculatorStyle.margin = w.getComputedStyle(b, '').margin;
+		calculatorStyle.padding = w.getComputedStyle(b, '').padding;
 		calculatorStyle.fontSize = this.fontSize+'px';
 		calculatorStyle.fontFamily = this.fontFamily;
 		var wrapLength = this.wrapLength;
-		calculatorStyle.width = wrapLength ? wrapLength+'ch' : 'auto';
+		calculatorStyle.width = wrapLength ?
+				wrapLength+'ch' :
+				d.getBoxObjectFor(b).width+'px' ;
 		calculatorStyle.whiteSpace = '-moz-pre-wrap';
 	},
  
