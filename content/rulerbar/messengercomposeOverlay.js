@@ -432,13 +432,21 @@ var RulerBar = {
 	getCurrentLine : function(aSelection) 
 	{
 		var physical = this.getPref('extensions.rulerbar.physicalPositioning');
-		if (physical) {
-			this.updateCalculator();
-			var doc = this.calculator.contentDocument;
-			var fragment = doc.createDocumentFragment();
+
+		if (!aSelection.rangeCount) {
+			var line = {
+				left       : '',
+				leftCount  : 0,
+				right      : '',
+				rightCount : 0
+			};
+			if (physical) line.physicalPosition = 0;
+			return line;
 		}
 
 		var node = aSelection.focusNode;
+		var leftRange = node.ownerDocument.createRange();
+		var rightRange = node.ownerDocument.createRange();
 		var offset = aSelection.focusOffset;
 		if (node.nodeType != Node.TEXT_NODE) {
 			node = this.getPreviousNodeFromSelection(aSelection) || node;
@@ -446,15 +454,10 @@ var RulerBar = {
 		}
 		var focusNode = node;
 
-		var left = (node.nodeValue || '').substring(0, offset);
-		var right = (node.nodeValue || '').substring(offset);
-
-		if (physical) {
-			fragment.appendChild(doc.importNode(node, true));
-			if (focusNode.nodeType == Node.TEXT_NODE) {
-				fragment.lastChild.nodeValue = left;
-			}
-		}
+		leftRange.selectNode(node);
+		leftRange.setEnd(node, offset);
+		rightRange.selectNode(node);
+		rightRange.setStart(node, (node.nodeValue || '').length - offset);
 
 		var walker = node.ownerDocument.createTreeWalker(
 				node.ownerDocument,
@@ -470,21 +473,13 @@ var RulerBar = {
 			!this.isBR(node)
 			)
 		{
-			left = (node.nodeValue || '') + left;
-			if (physical) {
-				fragment.insertBefore(doc.importNode(node, true), fragment.lastChild);
-			}
-		}
-		left = left.split(/[\n\r]+/);
-		left = left[left.length-1];
-
-		if (physical) {
-			var marker = doc.createElement('span');
-			fragment.appendChild(marker);
-
-			if (focusNode.nodeType == Node.TEXT_NODE) {
-				fragment.appendChild(doc.createTextNode(right));
-			}
+			leftRange.setStartBefore(node);
+			if (node.nodeType != Node.TEXT_NODE ||
+				!/[\n\r]/.test(node.nodeValue))
+				continue;
+			let left = node.nodeValue.split(/[\n\r]+/);
+			leftRange.setStart(node, node.nodeValue.length - left[left.length-1].length);
+			break;
 		}
 
 		walker.currentNode = focusNode;
@@ -494,23 +489,18 @@ var RulerBar = {
 			!this.isBR(node)
 			)
 		{
-			right += (node.nodeValue || '');
-			if (physical) {
-				fragment.appendChild(doc.importNode(node, true));
-			}
-		}
-		right = right.split(/[\n\r]+/);
-		right = right[0];
-
-		if (physical) {
-			var cRange = doc.createRange();
-			cRange.selectNodeContents(doc.body);
-			cRange.deleteContents();
-			cRange.insertNode(fragment);
-			cRange.detach();
+			rightRange.setEndAfter(node);
+			if (node.nodeType != Node.TEXT_NODE ||
+				!/[\n\r]/.test(node.nodeValue))
+				continue;
+			let right = node.nodeValue.split(/[\n\r]+/);
+			rightRange.setEnd(node, right[0].length);
+			break;
 		}
 
-		var line = {
+		var left  = leftRange.toString();
+		var right = rightRange.toString();
+		var line  = {
 				focusNode  : focusNode,
 				left       : left,
 				leftCount  : this.getLogicalLength(left),
@@ -519,6 +509,24 @@ var RulerBar = {
 			};
 
 		if (physical) {
+			this.updateCalculator();
+
+			var doc = this.calculator.contentDocument;
+			var marker = doc.createElement('span');
+
+			var fragment = doc.createDocumentFragment();
+			if (!leftRange.collapsed)
+				fragment.appendChild(doc.importNode(leftRange.cloneContents(), true));
+			fragment.appendChild(marker);
+			if (!rightRange.collapsed)
+				fragment.appendChild(doc.importNode(rightRange.cloneContents(), true));
+
+			var cRange = doc.createRange();
+			cRange.selectNodeContents(doc.body);
+			cRange.deleteContents();
+			cRange.insertNode(fragment);
+			cRange.detach();
+
 			line.physicalPosition = doc.getBoxObjectFor(marker).screenX - doc.getBoxObjectFor(doc.body).screenX;
 		}
 
