@@ -468,7 +468,7 @@ var RulerBar = {
 		rightRange.selectNode(node);
 		if (node.nodeType == Node.TEXT_NODE) {
 			leftRange.setEnd(node, offset);
-			rightRange.setStart(node, (node.nodeValue || '').length - offset);
+			rightRange.setStart(node, offset);
 		}
 		else {
 			rightRange.collapse(false);
