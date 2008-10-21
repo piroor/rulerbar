@@ -479,6 +479,11 @@ var RulerBar = {
 			rightRange.collapse(false);
 		}
 
+//		node = this.getLineTopOrEnd(focusNode, -1);
+//		if (node) leftRange.setStartBefore(node);
+//		node = this.getLineTopOrEnd(focusNode, 1);
+//		if (node) rightRange.setEndAfter(node);
+
 		var walker = node.ownerDocument.createTreeWalker(
 				node.ownerDocument,
 				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
@@ -543,6 +548,24 @@ var RulerBar = {
 		}
 
 		return this.processWrap(line);
+	},
+	getLineTopOrEnd : function(aBase, aDir)
+	{
+		var axis = aDir < 0 ? 'preceding' : 'following' ;
+		var blocks = 'p ol ul li dl dt dd table td th caption div pre address h1 h2 h3 h4 h5 h6';
+		var rejectCondition = 'contains(" BR '+blocks+' ", concat(" ",local-name()," "))';
+		var lastCondition = '[not('+axis+'::node())]';
+		var extractCondition = '['+axis+'-sibling::node()[1]['+rejectCondition+']]';
+		var text = axis+'::text()';
+		var element = axis+'::*[not('+rejectCondition+')]';
+		var expression = '(('+text+' | '+element+')'+extractCondition+' | '+'('+text+' | '+element+')'+lastCondition+')';
+		return aBase.ownerDocument.evaluate(
+				expression + (aDir < 0 ? '[last()]' : '[1]'),
+				aBase,
+				null,
+				XPathResult.FIRST_ORDERED_NODE_TYPE,
+				null
+			).singleNodeValue;
 	},
 	
 	updateCalculator : function() 
