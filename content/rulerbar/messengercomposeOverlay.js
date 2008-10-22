@@ -59,6 +59,7 @@ var RulerBar = {
 	columnLevel1 : 2,
 	scale : 100,
 	physical : false,
+	shouldUseXPath : true,
  
 	get wrapLength() 
 	{
@@ -479,38 +480,41 @@ var RulerBar = {
 			rightRange.collapse(false);
 		}
 
-//		node = this.getLineTopOrEnd(focusNode, -1);
-//		if (node) leftRange.setStartBefore(node);
-//		node = this.getLineTopOrEnd(focusNode, 1);
-//		if (node) rightRange.setEndAfter(node);
-
-		var walker = node.ownerDocument.createTreeWalker(
-				node.ownerDocument,
-				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-				this,
-				false
-			);
-
-		walker.currentNode = focusNode;
-		while (
-			(node = walker.previousNode()) &&
-			!this.isBody(node) &&
-			!this.isBR(node) &&
-			!this.isBlock(node)
-			)
-		{
-			leftRange.setStartBefore(node);
+		if (this.shouldUseXPath) {
+			node = this.getLineTopOrEnd(focusNode, -1);
+			if (node) leftRange.setStartBefore(node);
+			node = this.getLineTopOrEnd(focusNode, 1);
+			if (node) rightRange.setEndAfter(node);
 		}
+		else {
+			var walker = node.ownerDocument.createTreeWalker(
+					node.ownerDocument,
+					NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+					this,
+					false
+				);
 
-		walker.currentNode = focusNode;
-		while (
-			(node = walker.nextNode()) &&
-			!this.isBody(node) &&
-			!this.isBR(node) &&
-			!this.isBlock(node)
-			)
-		{
-			rightRange.setEndAfter(node);
+			walker.currentNode = focusNode;
+			while (
+				(node = walker.previousNode()) &&
+				!this.isBody(node) &&
+				!this.isBR(node) &&
+				!this.isBlock(node)
+				)
+			{
+				leftRange.setStartBefore(node);
+			}
+
+			walker.currentNode = focusNode;
+			while (
+				(node = walker.nextNode()) &&
+				!this.isBody(node) &&
+				!this.isBR(node) &&
+				!this.isBlock(node)
+				)
+			{
+				rightRange.setEndAfter(node);
+			}
 		}
 
 		var left  = leftRange.toString();
@@ -551,21 +555,34 @@ var RulerBar = {
 	},
 	getLineTopOrEnd : function(aBase, aDir)
 	{
-		var axis = aDir < 0 ? 'preceding' : 'following' ;
-		var blocks = 'p ol ul li dl dt dd table td th caption div pre address h1 h2 h3 h4 h5 h6';
-		var rejectCondition = 'contains(" BR '+blocks+' ", concat(" ",local-name()," "))';
-		var lastCondition = '[not('+axis+'::node())]';
-		var extractCondition = '['+axis+'-sibling::node()[1]['+rejectCondition+']]';
-		var text = axis+'::text()';
-		var element = axis+'::*[not('+rejectCondition+')]';
-		var expression = '(('+text+' | '+element+')'+extractCondition+' | '+'('+text+' | '+element+')'+lastCondition+')';
-		return aBase.ownerDocument.evaluate(
-				expression + (aDir < 0 ? '[last()]' : '[1]'),
+		var axis1 = aDir < 0 ? 'preceding' : 'following' ;
+		var axis2 = aDir < 0 ? 'ancestor' : 'descendant' ;
+		var backAxis1 = aDir < 0 ? 'following' : 'preceding' ;
+		var backAxis2 = aDir < 0 ? 'descendant' : 'ancestor' ;
+		var rejectList = 'BR HTML HEAD BODY P OL UL LI DL DT DD TABLE TD TH CAPTION DIV PRE ADDRESS H1 H2 H3 H4 H5 H6';
+		var condition = '[contains(" '+rejectList+' ", concat(" ",local-name()," "))]';
+		var nodes = aBase.ownerDocument.evaluate(
+				'self::*'+condition+' | '+axis1+'::*'+condition+' | '+axis2+'::*'+condition,
 				aBase,
 				null,
-				XPathResult.FIRST_ORDERED_NODE_TYPE,
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
 				null
-			).singleNodeValue;
+			);
+		var node = nodes.snapshotItem(aDir < 0 ? nodes.snapshotLength-1 : 0 );
+		if (node) {
+			axis1 = backAxis1;
+			axis2 = backAxis2;
+		}
+		nodes = aBase.ownerDocument.evaluate(
+				axis1+'::* | '+axis1+'::text() | '+axis2+'::* | '+axis2+'::text()',
+				node || aBase,
+				null,
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+				null
+			);
+		node = !nodes.snapshotLength ? null :
+				nodes.snapshotItem(aDir < 0 ? 0 : nodes.snapshotLength-1 );
+		return node;
 	},
 	
 	updateCalculator : function() 
