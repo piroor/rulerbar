@@ -588,7 +588,7 @@ var RulerBar = {
 			useBackAxis = true;
 		}
 		nodes = this.evaluateXPath(
-			axis1+'::* | '+axis1+'::text() | '+axis2+'self::* | '+axis2+'::text()',
+			axis1+'::* | '+axis1+'::text() | '+axis2+'::* | '+axis2+'::text()',
 			node || aBase,
 			XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
 		);
