@@ -595,10 +595,25 @@ var RulerBar = {
 		return node;
 	},
  
+	initCalculator : function() 
+	{
+		var d = this.calculator.contentDocument;
+		var head = d.getElementsByTagName('HEAD')[0];
+		if (head.getAttribute('initialized') == 'true') return;
+
+		var link = d.createElement('LINK');
+		link.setAttribute('rel', 'stylesheet');
+		link.setAttribute('href', 'chrome://messenger/skin/messageBody.css');
+		head.appendChild(link);
+		head.setAttribute('initialized', 'true');
+	},
+ 
 	updateCalculator : function() 
 	{
 		if (!this.calculator.contentDocument ||
 			!this.calculator.contentDocument.body) return;
+
+		this.initCalculator();
 
 		var w = this.frame.contentWindow;
 		var d = this.frame.contentDocument;
