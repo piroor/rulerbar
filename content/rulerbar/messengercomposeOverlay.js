@@ -48,6 +48,9 @@ var RulerBar = {
 	kLINE_END : 2,
 	kLINE_MIDDLE : 4,
 	lastPosition : 1, // kLINE_END
+
+	kSTRUCTURE_ELEMENTS : 'HTML HEAD BODY',
+	kBLOCK_ELEMENTS : 'P OL UL LI DL DT DD TABLE TD TH CAPTION DIV PRE ADDRESS H1 H2 H3 H4 H5 H6',
  
 /* properties */ 
 	
@@ -59,7 +62,6 @@ var RulerBar = {
 	columnLevel1 : 2,
 	scale : 100,
 	physical : false,
-	shouldUseXPath : true,
  
 	get wrapLength() 
 	{
@@ -185,7 +187,23 @@ var RulerBar = {
 	{
 		return document.getElementById('rulerbar-calculator-frame');
 	},
-  
+ 
+	evaluateXPath : function(aExpression, aContext, aResultType) 
+	{
+		return (aContext.ownerDocument || aContext || document).evaluate(
+				aExpression,
+				aContext || document,
+				null,
+				aResultType,
+				null
+			);
+	},
+	
+	getConditionToMatchElements : function(aElementNames) 
+	{
+		return 'contains(" '+aElementNames+' ", concat(" ",local-name()," "))';
+	},
+   
 	handleEvent : function(aEvent) 
 	{
 		switch (aEvent.type)
@@ -480,51 +498,13 @@ var RulerBar = {
 			rightRange.collapse(false);
 		}
 
-		if (this.shouldUseXPath) {
-			node = this.getLineTopOrEnd(focusNode, -1);
-			if (node) leftRange.setStartBefore(node);
-			node = this.getLineTopOrEnd(focusNode, 1);
-			if (node) rightRange.setEndAfter(node);
-		}
-		else {
-			var walker = node.ownerDocument.createTreeWalker(
-					node.ownerDocument,
-					NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-					this,
-					false
-				);
+		node = this.getLineTopOrEnd(focusNode, -1);
+		if (node) leftRange.setStartBefore(node);
+		node = this.getLineTopOrEnd(focusNode, 1);
+		if (node) rightRange.setEndAfter(node);
 
-			walker.currentNode = focusNode;
-			while (
-				(node = walker.previousNode()) &&
-				!this.isBody(node) &&
-				!this.isBR(node) &&
-				!this.isBlock(node)
-				)
-			{
-				leftRange.setStartBefore(node);
-			}
-
-			walker.currentNode = focusNode;
-			while (
-				(node = walker.nextNode()) &&
-				!this.isBody(node) &&
-				!this.isBR(node) &&
-				!this.isBlock(node)
-				)
-			{
-				rightRange.setEndAfter(node);
-			}
-		}
-
-		var left  = leftRange.toString();
-		var right = rightRange.toString();
 		var line  = {
-				focusNode  : focusNode,
-				left       : left,
-				leftCount  : this.getLogicalLength(left),
-				right      : right,
-				rightCount : this.getLogicalLength(right)
+				focusNode : focusNode
 			};
 
 		if (this.physical) {
@@ -549,42 +529,72 @@ var RulerBar = {
 			cRange.detach();
 
 			line.physicalPosition = doc.getBoxObjectFor(endMarker).screenX - doc.getBoxObjectFor(startMarker).screenX;
+			return line;
 		}
+		else {
+			var left = leftRange.toString();
+			line.left      = left;
+			line.leftCount = this.getLogicalLength(left);
 
-		return this.processWrap(line);
+			var right = rightRange.toString();
+			line.right      = right;
+			line.rightCount = this.getLogicalLength(right);
+
+			return this.processWrap(line);
+		}
 	},
-	getLineTopOrEnd : function(aBase, aDir)
+	
+	getPreviousNodeFromSelection : function(aSelection) 
+	{
+		var condition = this.getConditionToMatchElements('BR BODY');
+		var nodes = this.evaluateXPath(
+				'descendant-or-self::*['+condition+'] | descendant::text()',
+				aSelection.focusNode,
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
+			);
+		var selectionRange = aSelection.getRangeAt(0);
+		var node;
+		var nodeRange = aSelection.focusNode.ownerDocument.createRange();
+		for (var i = 0, maxi = nodes.snapshotLength; i < maxi; i++)
+		{
+			node = nodes.snapshotItem(i);
+			nodeRange.selectNode(node);
+			if (nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) == 0)
+				return node;
+		}
+		return null;
+	},
+ 
+// pixel-based method 
+	
+	getLineTopOrEnd : function(aBase, aDir) 
 	{
 		var axis1 = aDir < 0 ? 'preceding' : 'following' ;
 		var axis2 = aDir < 0 ? 'ancestor' : 'descendant' ;
 		var backAxis1 = aDir < 0 ? 'following' : 'preceding' ;
 		var backAxis2 = aDir < 0 ? 'descendant' : 'ancestor' ;
-		var rejectList = 'BR HTML HEAD BODY P OL UL LI DL DT DD TABLE TD TH CAPTION DIV PRE ADDRESS H1 H2 H3 H4 H5 H6';
-		var condition = '[contains(" '+rejectList+' ", concat(" ",local-name()," "))]';
-		var nodes = aBase.ownerDocument.evaluate(
+		var rejectList = 'BR '+this.kSTRUCTURE_ELEMENTS+' '+this.kBLOCK_ELEMENTS;
+		var condition = '['+this.getConditionToMatchElements(rejectList)+']';
+		var nodes = this.evaluateXPath(
 				'self::*'+condition+' | '+axis1+'::*'+condition+' | '+axis2+'::*'+condition,
 				aBase,
-				null,
-				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-				null
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
 			);
 		var node = nodes.snapshotItem(aDir < 0 ? nodes.snapshotLength-1 : 0 );
 		if (node) {
 			axis1 = backAxis1;
 			axis2 = backAxis2;
 		}
-		nodes = aBase.ownerDocument.evaluate(
-				axis1+'::* | '+axis1+'::text() | '+axis2+'::* | '+axis2+'::text()',
-				node || aBase,
-				null,
-				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-				null
-			);
+		nodes = this.evaluateXPath(
+			axis1+'::* | '+axis1+'::text() | '+axis2+'::* | '+axis2+'::text()',
+			node || aBase,
+			XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
+		);
 		node = !nodes.snapshotLength ? null :
 				nodes.snapshotItem(aDir < 0 ? 0 : nodes.snapshotLength-1 );
 		return node;
 	},
-	
+ 
 	updateCalculator : function() 
 	{
 		if (!this.calculator.contentDocument ||
@@ -607,31 +617,9 @@ var RulerBar = {
 				'-moz-pre-wrap' :
 				'normal' ;
 	},
- 
-	getPreviousNodeFromSelection : function(aSelection) 
-	{
-		var doc = aSelection.focusNode.ownerDocument;
-		var walker = doc.createTreeWalker(
-				doc,
-				NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-				this,
-				false
-			);
-		walker.currentNode = aSelection.focusNode;
-
-		var selectionRange = aSelection.getRangeAt(0);
-
-		var node;
-		var nodeRange = doc.createRange();
-		while (node = walker.nextNode())
-		{
-			nodeRange.selectNode(node);
-			if (nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) == 0)
-				return node;
-		}
-		return null;
-	},
- 
+  
+// character-based method 
+	
 	getLogicalLength : function(aString) 
 	{
 		var count = 0;
@@ -710,7 +698,8 @@ var RulerBar = {
 	calculateNewPosition : function(aLine) 
 	{
 		if (!this.shouldRoop || aLine.leftCount != this.wrapLength) {
-			return this.isBR(aLine.focusNode) ? this.kLINE_TOP :
+			return (aLine.focusNode.nodeType == Node.ELEMENT_NODE &&
+				aLine.focusNode.localName.toLowerCase() == 'br') ? this.kLINE_TOP :
 				!aLine.leftCount ? this.kLINE_TOP :
 				!aLine.rightCount ? this.kLINE_END :
 				this.kLINE_MIDDLE ;
@@ -768,32 +757,7 @@ var RulerBar = {
 		}
 		return onTop ? this.kLINE_TOP : this.kLINE_END ;
 	},
-   
-	acceptNode : function(aNode) 
-	{
-		return (this.isBR(aNode) || this.isBody(aNode)) && !this.isBlock(aNode) ?
-			NodeFilter.FILTER_ACCEPT :
-			NodeFilter.FILTER_SKIP ;
-	},
- 
-	isBR : function(aNode) 
-	{
-		return (aNode.nodeType == Node.ELEMENT_NODE &&
-			aNode.localName.toLowerCase() == 'br');
-	},
- 
-	isBody : function(aNode) 
-	{
-		return (aNode.nodeType == Node.ELEMENT_NODE &&
-			aNode.localName.toLowerCase() == 'body');
-	},
- 
-	isBlock : function(aNode) 
-	{
-		return (aNode.nodeType == Node.ELEMENT_NODE &&
-			/^(p|ol|ul|li|dl|dt|dd|td|th|caption|div|pre|address|h[1-6])$/i.test(aNode.localName));
-	},
-  
+     
 /* Prefs */ 
 	
 	get Prefs() 
