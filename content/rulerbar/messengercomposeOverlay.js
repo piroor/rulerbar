@@ -574,24 +574,41 @@ var RulerBar = {
 		var backAxis1 = aDir < 0 ? 'following' : 'preceding' ;
 		var backAxis2 = aDir < 0 ? 'descendant' : 'ancestor' ;
 		var rejectList = 'BR '+this.kSTRUCTURE_ELEMENTS+' '+this.kBLOCK_ELEMENTS;
-		var condition = '['+this.getConditionToMatchElements(rejectList)+']';
+		var condition = '['+this.getConditionToMatchElements(rejectList)+' or @_moz_quote="true"]';
 		var nodes = this.evaluateXPath(
 				'self::*'+condition+' | '+axis1+'::*'+condition+' | '+axis2+'::*'+condition,
 				aBase,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
 			);
 		var node = nodes.snapshotItem(aDir < 0 ? nodes.snapshotLength-1 : 0 );
+		var useBackAxis = false;
 		if (node) {
 			axis1 = backAxis1;
 			axis2 = backAxis2;
+			useBackAxis = true;
 		}
 		nodes = this.evaluateXPath(
-			axis1+'::* | '+axis1+'::text() | '+axis2+'::* | '+axis2+'::text()',
+			axis1+'::* | '+axis1+'::text() | '+axis2+'-or-self::* | '+axis2+'::text()',
 			node || aBase,
 			XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
 		);
 		node = !nodes.snapshotLength ? null :
-				nodes.snapshotItem(aDir < 0 ? 0 : nodes.snapshotLength-1 );
+				nodes.snapshotItem(
+					(useBackAxis) ?
+						(aDir < 0 ? 0 : nodes.snapshotLength-1 ) :
+						(aDir < 0 ? nodes.snapshotLength-1 : 0 )
+				);
+
+		var selectionRange = aBase.ownerDocument.createRange();
+		selectionRange.selectNode(aBase);
+		var nodeRange = aBase.ownerDocument.createRange();
+		nodeRange.selectNode(node);
+		if (aDir < 0 ?
+			(nodeRange.compareBoundaryPoints(Range.END_TO_START, selectionRange) >= 0) :
+			(nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) <= 0)) {
+			return null;
+		}
+
 		return node;
 	},
  
