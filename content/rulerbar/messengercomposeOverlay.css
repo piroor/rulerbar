@@ -33,15 +33,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ruler-bar-container,
 #ruler-bar > *,
 .ruler-cell {
 	overflow: hidden;
 }
 
-#ruler-bar {
-	height: 1em;
+#ruler-bar-container {
 	border-left: 1px solid ThreeDDarkShadow;
 	border-right: 1px solid ThreeDLightShadow;
+}
+
+#ruler-bar {
+	height: 1em;
+	position: relative;
+	margin: 0;
+	padding: 0;
 }
 
 #ruler-bar > * {

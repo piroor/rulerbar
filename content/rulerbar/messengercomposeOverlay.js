@@ -226,6 +226,10 @@ var RulerBar = {
 				this.lastClickedScreenY = aEvent.screenY;
 				break;
 
+			case 'scroll':
+				this.bar.style.marginLeft = (-this.frame.contentWindow.scrollX)+'px';
+				break;
+
 			case 'DOMAttrModified':
 				if (
 					aEvent.target == this.contentBody &&
@@ -295,6 +299,7 @@ var RulerBar = {
 		this.frame.addEventListener('keypress', this, false);
 		this.frame.addEventListener('click', this, false);
 		this.frame.addEventListener('dragover', this, false);
+		this.frame.addEventListener('scroll', this, false);
 
 		this.addPrefListener();
 		this.observe(null, 'nsPref:changed', 'mailnews.wraplength');
@@ -333,12 +338,15 @@ var RulerBar = {
 		this.frame.removeEventListener('keypress', this, false);
 		this.frame.removeEventListener('click', this, false);
 		this.frame.removeEventListener('dragover', this, false);
+		this.frame.removeEventListener('scroll', this, false);
 		this.removePrefListener();
 		this.removeSelectionListener();
 	},
   
 	initRuler : function() 
 	{
+		this.bar.style.marginLeft = 0;
+
 		var range = document.createRange();
 		range.selectNodeContents(this.scaleBar);
 		range.deleteContents();
