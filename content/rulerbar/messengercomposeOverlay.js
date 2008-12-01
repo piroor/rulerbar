@@ -607,14 +607,16 @@ var RulerBar = {
 						(aDir < 0 ? nodes.snapshotLength-1 : 0 )
 				);
 
-		var selectionRange = aBase.ownerDocument.createRange();
-		selectionRange.selectNode(aBase);
-		var nodeRange = aBase.ownerDocument.createRange();
-		nodeRange.selectNode(node);
-		if (aDir < 0 ?
-			(nodeRange.compareBoundaryPoints(Range.END_TO_START, selectionRange) >= 0) :
-			(nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) <= 0)) {
-			return null;
+		if (node) {
+			var selectionRange = aBase.ownerDocument.createRange();
+			selectionRange.selectNode(aBase);
+			var nodeRange = aBase.ownerDocument.createRange();
+			nodeRange.selectNode(node);
+			if (aDir < 0 ?
+				(nodeRange.compareBoundaryPoints(Range.END_TO_START, selectionRange) >= 0) :
+				(nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) <= 0)) {
+				node = null;
+			}
 		}
 
 		return node;
