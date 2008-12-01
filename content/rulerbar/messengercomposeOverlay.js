@@ -239,6 +239,10 @@ var RulerBar = {
 				}
 				break;
 
+			case 'compose-window-init':
+				this.delayedInit();
+				break;
+
 			case 'compose-window-close':
 				this.contentBody.removeEventListener('DOMAttrModified', this, true);
 //				this.contentBody.removeEventListener('DOMNodeInserted', this, true);
@@ -320,6 +324,7 @@ var RulerBar = {
 		this.overrideFunctions();
 
 		window.addEventListener('unload', this, false);
+		document.documentElement.addEventListener('compose-window-init', this, false);
 		document.documentElement.addEventListener('compose-window-close', this, false);
 		this.frame.addEventListener('keypress', this, false);
 		this.frame.addEventListener('click', this, false);
@@ -340,11 +345,6 @@ var RulerBar = {
 	
 	overrideFunctions : function() 
 	{
-		eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
-			'{',
-			'{ RulerBar.delayedInit();'
-		));
-
 		eval('window.SetDocumentCharacterSet = '+window.SetDocumentCharacterSet.toSource().replace(
 			'{',
 			'{ RulerBar.onCharsetChange(arguments[0]); '
@@ -364,6 +364,7 @@ var RulerBar = {
 	destroy : function() 
 	{
 		window.removeEventListener('unload', this, false);
+		document.documentElement.removeEventListener('compose-window-init', this, false);
 		document.documentElement.removeEventListener('compose-window-close', this, false);
 		this.frame.removeEventListener('keypress', this, false);
 		this.frame.removeEventListener('click', this, false);
