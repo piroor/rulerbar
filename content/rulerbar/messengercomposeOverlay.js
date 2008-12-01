@@ -90,7 +90,7 @@ var RulerBar = {
 	{
 		var w = this.frame.contentWindow;
 		var d = this.frame.contentDocument;
-		var size = w.getComputedStyle(d.documentElement, '').fontSize;
+		var size = w.getComputedStyle(this.contentBody, '').fontSize;
 		size = parseInt(size.match(/^\d+/));
 		var scale = Math.max(1, this.scale);
 		return size * (scale / 100);
@@ -249,6 +249,31 @@ var RulerBar = {
 	lastKeyCode : -1, 
 	lastClickedScreenX : -1,
 	lastClickedScreenY : -1,
+ 
+	onCharsetChange : function(aCharset) 
+	{
+		if (!aCharset) {
+			aCharset = gCurrentMailSendCharset || this.frame.contentDocument.characterSet;
+		}
+		if (!aCharset) {
+			return;
+		}
+		var docCharset = this.calculator.docShell
+				.QueryInterface(Components.interfaces.nsIDocCharset);
+		docCharset.charset = aCharset;
+		try {
+			var webNav = this.calculator.webNavigation;
+			var self = this;
+			this.calculator.addEventListener('DOMContentLoaded', function() {
+				self.calculator.removeEventListener('DOMContentLoaded', arguments.callee, false);
+				self.updateRulerAppearance();
+			}, false);
+			webNav.reload(webNav.LOAD_FLAGS_CHARSET_CHANGE);
+		}
+		catch(e) {
+			this._isChangingCharset = false;
+		}
+	},
   
 /* selection */ 
 	
@@ -292,7 +317,7 @@ var RulerBar = {
 	{
 		window.removeEventListener('DOMContentLoaded', this, false);
 
-		this.overrideStartupMethod();
+		this.overrideFunctions();
 
 		window.addEventListener('unload', this, false);
 		document.documentElement.addEventListener('compose-window-close', this, false);
@@ -313,11 +338,16 @@ var RulerBar = {
 		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.physicalPositioning');
 	},
 	
-	overrideStartupMethod : function() 
+	overrideFunctions : function() 
 	{
 		eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
 			'{',
 			'{ RulerBar.delayedInit();'
+		));
+
+		eval('window.SetDocumentCharacterSet = '+window.SetDocumentCharacterSet.toSource().replace(
+			'{',
+			'{ RulerBar.onCharsetChange(arguments[0]); '
 		));
 	},
  
@@ -345,31 +375,42 @@ var RulerBar = {
   
 	initRuler : function() 
 	{
+		this.updateRulerAppearance();
+		if (this._initRulerTimer) {
+			window.clearTimeout(this._initRulerTimer);
+		}
+		this._initRulerTimer = window.setTimeout(function(aSelf) {
+			aSelf.onCharsetChange();
+			aSelf._initRulerTimer = null;
+		}, 0, this);
+	},
+	
+	updateRulerAppearance : function() 
+	{
 		this.bar.style.marginLeft = 0;
 
 		var range = document.createRange();
 		range.selectNodeContents(this.scaleBar);
 		range.deleteContents();
 		range.detach();
-		this.updateRulerAppearance();
-		if (this._createTimer) return;
-		this._createTimer = window.setTimeout(function(aSelf) {
-			aSelf.calculator.style.visibility = 'hidden';
-			aSelf.buildRulerMarks();
-			aSelf.updateOffset();
-			aSelf.updateCursor();
-			aSelf._createTimer = null;
-		}, 0, this);
-	},
-	
-	updateRulerAppearance : function() 
-	{
+
 		this.bar.setAttribute(
 			'style',
 			'font-size:'+this.fontSize+'px;'+
 			'color:'+this.color+';'+
 			'background-color:'+this.backgroundColor+';'
 		);
+
+		if (this._updateRulerAppearanceTimer) {
+			window.clearTimeout(this._updateRulerAppearanceTimer);
+		}
+		this._updateRulerAppearanceTimer = window.setTimeout(function(aSelf) {
+			aSelf.calculator.style.visibility = 'hidden';
+			aSelf.updateOffset();
+			aSelf.buildRulerMarks();
+			aSelf.updateCursor();
+			aSelf._updateRulerAppearanceTimer = null;
+		}, 0, this);
 	},
 	
 	updateRulerAppearanceWithDelay : function() 
@@ -400,6 +441,7 @@ var RulerBar = {
 		if (minCol <= 0) minCol = 2;
 
 		var unit, level;
+		var fragment = document.createDocumentFragment();
 		for (var i = 0; i < maxCount; i++)
 		{
 			level = i % counterCol == 0 ? 3 :
@@ -416,7 +458,7 @@ var RulerBar = {
 			unit.setAttribute(this.kRULER_CELL, true);
 			unit.setAttribute('style', 'width:'+size+'px');
 			unit.setAttribute('tooltiptext', i);
-			rulerBox.appendChild(unit);
+			fragment.appendChild(unit);
 
 			if (level == 3) {
 				unit.appendChild(document.createElement('label'))
@@ -428,6 +470,7 @@ var RulerBar = {
 				);
 			}
 		}
+		rulerBox.appendChild(fragment);
 	},
  
 	updateOffset : function() 
