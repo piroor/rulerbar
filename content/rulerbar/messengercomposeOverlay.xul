@@ -15,7 +15,7 @@
    - The Original Code is "Ruler Bar".
    -
    - The Initial Developer of the Original Code is ClearCode Inc.
-   - Portions created by the Initial Developer are Copyright (C) 2008
+   - Portions created by the Initial Developer are Copyright (C) 2008-2009
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): SHIMODA Hiroshi <piro@p.club.ne.jp>
@@ -36,6 +36,7 @@
 <?xml-stylesheet type="text/css" href="chrome://rulerbar/content/messengercomposeOverlay.css"?>
 <?xml-stylesheet type="text/css" href="chrome://rulerbar-platform/content/rulerbar.css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/boxObject.js"/>
 <script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/messengercomposeOverlay.js"/>
 <vbox id="appcontent">
 	<hbox id="ruler-bar-container" insertbefore="content-frame">
