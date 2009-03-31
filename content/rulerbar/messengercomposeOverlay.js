@@ -203,7 +203,32 @@ var RulerBar = {
 	{
 		return 'contains(" '+aElementNames+' ", concat(" ",local-name()," "))';
 	},
-   
+  
+	getBoxObjectFor : function(aNode) 
+	{
+		if ('getBoxObjectFor' in aNode.ownerDocument)
+			return aNode.ownerDocument.getBoxObjectFor(aNode);
+
+		var box = {
+				x       : 0,
+				y       : 0,
+				width   : 0,
+				height  : 0,
+				screenX : 0,
+				screenY : 0
+			};
+		try {
+			var rect = aNode.getBoundingClientRect();
+			box.x = rect.left+1;
+			box.y = rect.top+1;
+			box.width  = rect.right-rect.left;
+			box.height = rect.bottom-rect.top;
+		}
+		catch(e) {
+		}
+		return box;
+	},
+  
 	handleEvent : function(aEvent) 
 	{
 		switch (aEvent.type)
@@ -580,7 +605,7 @@ var RulerBar = {
 			cRange.insertNode(fragment);
 			cRange.detach();
 
-			line.physicalPosition = doc.getBoxObjectFor(endMarker).screenX - doc.getBoxObjectFor(startMarker).screenX;
+			line.physicalPosition = this.getBoxObjectFor(endMarker).x - this.getBoxObjectFor(startMarker).x;
 			return line;
 		}
 		else {
@@ -698,7 +723,7 @@ var RulerBar = {
 		var wrapLength = this.wrapLength;
 		calculatorStyle.width = wrapLength ?
 				wrapLength+'ch' :
-				d.getBoxObjectFor(b).width+'px' ;
+				this.getBoxObjectFor(b).width+'px' ;
 		calculatorStyle.whiteSpace = (wrapLength || this.frame.editortype == 'textmail')  ?
 				'-moz-pre-wrap' :
 				'normal' ;
@@ -803,7 +828,7 @@ var RulerBar = {
 				reason & nsISelectionListener.MOUSEUP_REASON
 			)
 			) {
-			var bodyBox = this.frame.contentDocument.getBoxObjectFor(this.contentBody);
+			var bodyBox = this.getBoxObjectFor(this.contentBody);
 			onTop = this.lastClickedScreenX < bodyBox.screenX + (bodyBox.width / 3);
 		}
 		else if (
