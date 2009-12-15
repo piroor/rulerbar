@@ -34,7 +34,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 <?xml-stylesheet type="text/css" href="chrome://rulerbar/content/messengercomposeOverlay.css"?>
-<?xml-stylesheet type="text/css" href="chrome://rulerbar-platform/content/rulerbar.css"?>
+<?xml-stylesheet type="text/css" href="chrome://rulerbar/classic/rulerbar.css"?>
+<?xml-stylesheet type="text/css" href="chrome://rulerbar-platform/classic/rulerbar.css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/boxObject.js"/>
 <script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/messengercomposeOverlay.js"/>
