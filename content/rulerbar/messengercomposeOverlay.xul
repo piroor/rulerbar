@@ -37,8 +37,8 @@
 <?xml-stylesheet type="text/css" href="chrome://rulerbar/skin/rulerbar.css"?>
 <?xml-stylesheet type="text/css" href="chrome://rulerbar-platform/skin/rulerbar.css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/boxObject.js"/>
-<script type="application/x-javascript;version=1.7" src="chrome://rulerbar/content/messengercomposeOverlay.js"/>
+<script type="application/javascript" src="chrome://rulerbar/content/boxObject.js"/>
+<script type="application/javascript" src="chrome://rulerbar/content/messengercomposeOverlay.js"/>
 <vbox id="appcontent">
 	<hbox id="ruler-bar-container" insertbefore="content-frame">
 		<stack id="ruler-bar">
