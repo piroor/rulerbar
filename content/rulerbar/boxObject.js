@@ -7,13 +7,32 @@
                          .boxObject
                          .getBoxObjectFor(HTMLElement);
 
- lisence: The MIT License, Copyright (c) 2009 SHIMODA "Piro" Hiroshi
+ license: The MIT License, Copyright (c) 2009-2010 SHIMODA "Piro" Hiroshi
    http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/license.txt
  original:
    http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/boxObject.js
+   http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/boxObject.test.js
+   http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/fixtures/box.html
 */
+
+/* To work as a JS Code Module */
+if (typeof window == 'undefined') {
+	this.EXPORTED_SYMBOLS = ['boxObject'];
+
+	// If namespace.jsm is available, export symbols to the shared namespace.
+	// See: http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/namespace.jsm
+	try {
+		let ns = {};
+		Components.utils.import('resource://rulerbar-modules/namespace.jsm', ns);
+		/* var */ window = ns.getNamespaceFor('piro.sakura.ne.jp');
+	}
+	catch(e) {
+		window = {};
+	}
+}
+
 (function() {
-	const currentRevision = 5;
+	const currentRevision = 6;
 
 	if (!('piro.sakura.ne.jp' in window)) window['piro.sakura.ne.jp'] = {};
 
@@ -46,7 +65,8 @@
 					width   : boxObject.width,
 					height  : boxObject.height,
 					screenX : boxObject.screenX,
-					screenY : boxObject.screenY
+					screenY : boxObject.screenY,
+					element : aNode
 				};
 			if (!aUnify) return box;
 
@@ -71,7 +91,8 @@
 					width   : 0,
 					height  : 0,
 					screenX : 0,
-					screenY : 0
+					screenY : 0,
+					element : aNode
 				};
 			try {
 				var zoom = this.getZoom(aNode.ownerDocument.defaultView);
@@ -108,10 +129,12 @@
 			catch(e) {
 			}
 
-			for (let i in box)
-			{
-				box[i] = Math.round(box[i]);
-			}
+			'x,y,screenX,screenY,width,height,left,top,right,bottom'
+				.split(',')
+				.forEach(function(aProperty) {
+					if (aProperty in box)
+						box[aProperty] = Math.round(box[aProperty]);
+				});
 
 			return box;
 		},
@@ -150,3 +173,7 @@
 
 	};
 })();
+
+if (window != this) { // work as a JS Code Module
+	this.boxObject = window['piro.sakura.ne.jp'].boxObject;
+}
