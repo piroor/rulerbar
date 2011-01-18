@@ -44,6 +44,8 @@ var RulerBar = {
 	kCURSORBAR            : 'ruler-cursorbar',
 	kCURSORBAR_POSITIONER : 'ruler-cursorbar-positioner',
 
+	kRULER_BAR_DRAG_TYPE : 'application/x-rulerbar-ruler',
+
 	kLINE_TOP : 1,
 	kLINE_END : 2,
 	kLINE_MIDDLE : 4,
@@ -240,6 +242,13 @@ var RulerBar = {
 			case 'dblclick':
 				return this.onDblClickOnBar(aEvent);
 
+			case 'dragstart':
+				return this.onScaleDragStart(aEvent);
+
+			case 'dragenter':
+			case 'drop':
+				return this.onScaleDragging(aEvent);
+
 			case 'DOMAttrModified':
 				if (
 					aEvent.target == this.contentBody &&
@@ -298,15 +307,37 @@ var RulerBar = {
  
 	onDblClickOnBar : function(aEvent)
 	{
-		var cell = aEvent.originalTarget;
-		while (cell)
+		this.setWrapLengthToCell(aEvent.originalTarget);
+	},
+	setWrapLengthToCell : function(aCell)
+	{
+		while (aCell)
 		{
-			if (cell.hasAttribute(this.kRULER_CELL))
+			if (aCell.nodeType == Node.ELEMENT_NODE && aCell.hasAttribute(this.kRULER_CELL))
 				break;
-			cell = cell.parentNode;
+			aCell = aCell.parentNode;
 		}
-		if (cell)
-			this.setPref('mailnews.wraplength', parseInt(cell.getAttribute('count')));
+		if (aCell)
+			this.setPref('mailnews.wraplength', parseInt(aCell.getAttribute('count')));
+	},
+ 
+	onScaleDragStart : function(aEvent)
+	{
+		var dt = aEvent.dataTransfer;
+		dt.setData(this.kRULER_BAR_DRAG_TYPE, aEvent.clientX);
+		dt.effectAllowed = 'move';
+		dt.mozCursor = 'default';
+	},
+ 
+	onScaleDragging : function(aEvent)
+	{
+		var dt = aEvent.dataTransfer;
+		if (!dt.types.contains(this.kRULER_BAR_DRAG_TYPE))
+			return;
+
+		this.setWrapLengthToCell(aEvent.originalTarget);
+
+		aEvent.preventDefault();
 	},
  
 	onCharsetChange : function(aCharset) 
@@ -1020,7 +1051,7 @@ var RulerBar = {
 
 			case 'mailnews.wraplength':
 				this._wrapLength = value;
-				this.editor.document.body.style.width = count+'ch';
+				this.editor.document.body.style.width = value+'ch';
 				break;
 
 			case 'extensions.rulerbar.tabWidth':
