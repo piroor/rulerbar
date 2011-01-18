@@ -39,6 +39,7 @@ var RulerBar = {
 	kCURSOR      : 'ruler-cursor',
 	kWRAP_MARKER : 'ruler-wrap',
 	kWRAP_POPUP  : 'ruler-wrap-popup',
+	kWRAP_INDICATOR : 'ruler-wrap-indicator',
 	kSCALEBAR    : 'ruler-scalebar',
 	kRULER_CELL  : 'ruler-cell',
 	kWRAP_CELL   : 'wrap-cell',
@@ -173,6 +174,10 @@ var RulerBar = {
 	{
 		return document.getElementById(this.kWRAP_POPUP);
 	},
+	get wrapIndicator()
+	{
+		return this.editor.document.getElementById(this.kWRAP_INDICATOR);
+	},
  
 	get marks() 
 	{
@@ -225,7 +230,7 @@ var RulerBar = {
 	calculateWrapLength : function(aEvent) 
 	{
 		var unit = this.wrapCell.boxObject.width || 1;
-		return Math.ceil((aEvent.screenX - this.scaleBar.boxObject.screenX) / unit);
+		return Math.round((aEvent.screenX - this.scaleBar.boxObject.screenX) / unit);
 	},
  
 	setWrapLengthToCell : function(aCell) 
@@ -343,6 +348,26 @@ var RulerBar = {
 	onWrapMarkerDragStart : function(aEvent) 
 	{
 		this.wrapMarker.setAttribute('dragging', true);
+
+		var indicator = this.wrapIndicator;
+		if (indicator)
+			indicator.parentNode.removeChild(indicator);
+
+		var doc = this.editor.document;
+		indicator = doc.createElement('span');
+		indicator.setAttribute('id', this.kWRAP_INDICATOR);
+		indicator.setAttribute('style',
+			'position: fixed !important;'+
+			'top: 0 !important;'+
+			'left: 0 !important;'+
+			'width: 0 !important;'+
+			'height: '+this.frame.boxObject.height+'px !important;'+
+			'border-left: 1px dashed '+this.color+' !important;'+
+			'opacity: 0.65 !important;'
+		);
+		doc.body.appendChild(indicator);
+
+		this.onWrapMarkerDragging(aEvent);
 	},
  
 	onWrapMarkerDragging : function(aEvent) 
@@ -354,6 +379,10 @@ var RulerBar = {
 		this.wrapPopup.firstChild.setAttribute('value', wrap);
 		this.wrapPopup.openPopup(this.wrapMarker, 'after_pointer', 0, 0, false, false);
 		this.updateWrapMarker(wrap);
+
+		var indicator = this.wrapIndicator;
+		if (indicator)
+			indicator.style.marginLeft = this.wrapMarker.style.marginLeft;
 	},
  
 	onWrapMarkerDragEnd : function(aEvent) 
@@ -363,6 +392,10 @@ var RulerBar = {
 
 		this.wrapPopup.hidePopup();
 		this.wrapMarker.removeAttribute('dragging');
+
+		var indicator = this.wrapIndicator;
+		if (indicator)
+			indicator.parentNode.removeChild(indicator);
 
 		var wrap = this.calculateWrapLength(aEvent);
 		this.updateWrapMarker(wrap);
