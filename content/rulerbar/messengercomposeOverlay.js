@@ -835,7 +835,7 @@ var RulerBar = {
 				wrapLength+'ch' :
 				this.getBoxObjectFor(b).width+'px' ;
 		calculatorStyle.whiteSpace = (wrapLength || this.frame.editortype == 'textmail')  ?
-				'-moz-pre-wrap' :
+				'pre-wrap' :
 				'normal' ;
 	},
   
