@@ -298,6 +298,21 @@ var RulerBar = {
  
 	onDblClickOnBar : function(aEvent)
 	{
+		var cell = aEvent.originalTarget;
+		while (cell)
+		{
+			if (cell.hasAttribute(this.kRULER_CELL))
+				break;
+			cell = cell.parentNode;
+		}
+		if (cell)
+			this.setWrapLength(parseInt(cell.getAttribute('count')));
+	},
+ 
+	updateWrapLength : function(aCount)
+	{
+		this.editor.document.body.style.width = count+'ch';
+		this.setPref('mailnews.wraplength', count);
 	},
  
 	onCharsetChange : function(aCharset) 
@@ -504,6 +519,7 @@ var RulerBar = {
 			);
 			unit.setAttribute(this.kRULER_CELL, true);
 			unit.setAttribute('style', 'width:'+size+'px');
+			unit.setAttribute('count', i);
 			unit.setAttribute('tooltiptext', i);
 			fragment.appendChild(unit);
 
