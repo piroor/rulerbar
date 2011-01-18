@@ -237,6 +237,9 @@ var RulerBar = {
 				this.bar.style.marginLeft = (-this.frame.contentWindow.scrollX)+'px';
 				break;
 
+			case 'dblclick':
+				return this.onDblClickOnBar(aEvent);
+
 			case 'DOMAttrModified':
 				if (
 					aEvent.target == this.contentBody &&
@@ -291,6 +294,10 @@ var RulerBar = {
 		catch(e) {
 			// on Gecko 1.8, sendMouseEvent is not available.
 		}
+	},
+ 
+	onDblClickOnBar : function(aEvent)
+	{
 	},
  
 	onCharsetChange : function(aCharset) 
