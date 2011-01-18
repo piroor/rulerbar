@@ -40,7 +40,8 @@
 <script type="application/javascript" src="chrome://rulerbar/content/boxObject.js"/>
 <script type="application/javascript" src="chrome://rulerbar/content/messengercomposeOverlay.js"/>
 <vbox id="appcontent">
-	<hbox id="ruler-bar-container" insertbefore="content-frame">
+	<hbox id="ruler-bar-container" insertbefore="content-frame"
+		onclick="RulerBar.handleEvent(event);">
 		<stack id="ruler-bar">
 			<browser id="rulerbar-calculator-frame"
 				type="content"/>

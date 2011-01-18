@@ -226,6 +226,8 @@ var RulerBar = {
 				break;
 
 			case 'click':
+				if (aEvent.currentTarget.id == 'ruler-bar-container')
+					return this.onClickOnBar(aEvent);
 			case 'dragover':
 				this.lastClickedScreenX = aEvent.screenX;
 				this.lastClickedScreenY = aEvent.screenY;
@@ -258,6 +260,38 @@ var RulerBar = {
 	lastKeyCode : -1, 
 	lastClickedScreenX : -1,
 	lastClickedScreenY : -1,
+ 
+	onClickOnBar : function(aEvent)
+	{
+		var selection = this.editor.selection;
+		if (!selection.rangeCount) return;
+
+		var doc = this.editor.document;
+		var marker = doc.createElement('span');
+		var range = selection.getRangeAt(0).cloneRange();
+		range.insertNode(marker);
+		range.detach();
+
+		var clientX = aEvent.screenX - this.scaleBar.boxObject.screenX;
+		var clientY = this.getBoxObjectFor(marker).screenY
+						 - this.getBoxObjectFor(doc.body).screenY
+						  - doc.defaultView.scrollY;
+
+		marker.parentNode.removeChild(marker);
+
+		try {
+			var windowUtils = doc.defaultView
+								.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+								.getInterface(Components.interfaces.nsIDOMWindowUtils);
+			if (windowUtils.sendMouseEvent) {
+				windowUtils.sendMouseEvent('mousedown', clientX, clientY + 1, 0, 1, 0, false);
+				windowUtils.sendMouseEvent('mouseup', clientX, clientY + 1, 0, 1, 0, false);
+			}
+		}
+		catch(e) {
+			// on Gecko 1.8, sendMouseEvent is not available.
+		}
+	},
  
 	onCharsetChange : function(aCharset) 
 	{
@@ -522,8 +556,9 @@ var RulerBar = {
 	_updating : false,
 	lastReason : -1,
 	
-	getCurrentLine : function(aSelection) 
+	getCurrentLine : function(aSelection, aForcePhysical) 
 	{
+		var isPhysical = aForcePhysical || this.physical;
 		if (!aSelection.rangeCount) {
 			var line = {
 				left       : '',
@@ -531,7 +566,7 @@ var RulerBar = {
 				right      : '',
 				rightCount : 0
 			};
-			if (this.physical) line.physicalPosition = 0;
+			if (isPhysical) line.physicalPosition = 0;
 			return line;
 		}
 
@@ -567,14 +602,16 @@ var RulerBar = {
 				focusNode : focusNode
 			};
 
-		if (this.physical) {
+		if (isPhysical) {
 			this.updateCalculator();
 
-			var doc = this.calculator.contentDocument;
-			var startMarker = doc.createElement('span');
-			var endMarker = doc.createElement('span');
+			let doc = this.calculator.contentDocument;
+			let startMarker = doc.createElement('span');
+			startMarker.setAttribute('id', 'start-marker');
+			let endMarker = doc.createElement('span');
+			endMarker.setAttribute('id', 'end-marker');
 
-			var fragment = doc.createDocumentFragment();
+			let fragment = doc.createDocumentFragment();
 			fragment.appendChild(startMarker);
 			if (!leftRange.collapsed)
 				fragment.appendChild(doc.importNode(leftRange.cloneContents(), true));
@@ -582,7 +619,7 @@ var RulerBar = {
 			if (!rightRange.collapsed)
 				fragment.appendChild(doc.importNode(rightRange.cloneContents(), true));
 
-			var cRange = doc.createRange();
+			let cRange = doc.createRange();
 			cRange.selectNodeContents(doc.body);
 			cRange.deleteContents();
 			cRange.insertNode(fragment);
