@@ -556,9 +556,12 @@ var RulerBar = {
 		}
 
 		node = this.getLineTopOrEnd(focusNode, -1);
-		if (node) leftRange.setStartBefore(node);
+		if (node && (node != node.ownerDocument.body))
+			leftRange.setStartBefore(node);
+
 		node = this.getLineTopOrEnd(focusNode, 1);
-		if (node) rightRange.setEndAfter(node);
+		if (node && (node != node.ownerDocument.body))
+			rightRange.setEndAfter(node);
 
 		var line  = {
 				focusNode : focusNode
