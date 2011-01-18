@@ -42,9 +42,7 @@
 <vbox id="appcontent">
 	<hbox id="ruler-bar-container" insertbefore="content-frame"
 		onclick="RulerBar.handleEvent(event);"
-		ondblclick="RulerBar.handleEvent(event);"
-		onmousemove="RulerBar.handleEvent(event);"
-		onmouseup="RulerBar.handleEvent(event);">
+		ondblclick="RulerBar.handleEvent(event);">
 		<stack id="ruler-bar">
 			<browser id="rulerbar-calculator-frame"
 				type="content"/>

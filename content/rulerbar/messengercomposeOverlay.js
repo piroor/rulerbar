@@ -303,6 +303,7 @@ var RulerBar = {
 			case 'compose-window-close':
 				this.contentBody.removeEventListener('DOMAttrModified', this, true);
 //				this.contentBody.removeEventListener('DOMNodeInserted', this, true);
+				this.deactivateWrapMarker();
 				break;
 		}
 	},
@@ -347,25 +348,7 @@ var RulerBar = {
  
 	onWrapMarkerDragStart : function(aEvent) 
 	{
-		this.wrapMarker.setAttribute('dragging', true);
-
-		var indicator = this.wrapIndicator;
-		if (indicator)
-			indicator.parentNode.removeChild(indicator);
-
-		var doc = this.editor.document;
-		indicator = doc.createElement('span');
-		indicator.setAttribute('id', this.kWRAP_INDICATOR);
-		indicator.setAttribute('style',
-			'position: fixed !important;'+
-			'top: 0 !important;'+
-			'left: 0 !important;'+
-			'width: 0 !important;'+
-			'height: '+this.frame.boxObject.height+'px !important;'+
-			'border-left: 1px dashed '+this.color+' !important;'+
-			'opacity: 0.65 !important;'
-		);
-		doc.body.appendChild(indicator);
+		this.activateWrapMarker();
 
 		this.onWrapMarkerDragging(aEvent);
 	},
@@ -391,16 +374,60 @@ var RulerBar = {
 			return;
 
 		this.wrapPopup.hidePopup();
+		this.deactivateWrapMarker();
+
+		var wrap = this.calculateWrapLength(aEvent);
+		this.updateWrapMarker(wrap);
+		if (wrap != this.wrapLength)
+			this.setPref('mailnews.wraplength', wrap);
+	},
+ 
+	activateWrapMarker : function() 
+	{
+		if (this.wrapMarker.hasAttribute('dragging'))
+			return;
+
+		this.wrapMarker.setAttribute('dragging', true);
+
+		var indicator = this.wrapIndicator;
+		if (indicator)
+			indicator.parentNode.removeChild(indicator);
+
+		var doc = this.editor.document;
+		indicator = doc.createElement('span');
+		indicator.setAttribute('id', this.kWRAP_INDICATOR);
+		indicator.setAttribute('style',
+			'position: fixed !important;'+
+			'top: 0 !important;'+
+			'left: 0 !important;'+
+			'width: 0 !important;'+
+			'height: '+this.frame.boxObject.height+'px !important;'+
+			'border-left: 1px dashed '+this.color+' !important;'+
+			'opacity: 0.65 !important;'
+		);
+		doc.body.appendChild(indicator);
+
+		this.bar.addEventListener('mousemove', this, false);
+		this.bar.addEventListener('mouseup', this, false);
+		this.frame.addEventListener('mousemove', this, true);
+		this.frame.addEventListener('mouseup', this, true);
+	},
+ 
+	deactivateWrapMarker : function() 
+	{
+		if (!this.wrapMarker.hasAttribute('dragging'))
+			return;
+
 		this.wrapMarker.removeAttribute('dragging');
 
 		var indicator = this.wrapIndicator;
 		if (indicator)
 			indicator.parentNode.removeChild(indicator);
 
-		var wrap = this.calculateWrapLength(aEvent);
-		this.updateWrapMarker(wrap);
-		if (wrap != this.wrapLength)
-			this.setPref('mailnews.wraplength', wrap);
+		this.bar.removeEventListener('mousemove', this, false);
+		this.bar.removeEventListener('mouseup', this, false);
+		this.frame.removeEventListener('mousemove', this, true);
+		this.frame.removeEventListener('mouseup', this, true);
 	},
  
 	onCharsetChange : function(aCharset) 
@@ -451,23 +478,23 @@ var RulerBar = {
  
 	addSelectionListener : function() 
 	{
-		if (this._listening) return;
+		if (this._selectionListening) return;
 		this.editor
 			.selection
 			.QueryInterface(Components.interfaces.nsISelectionPrivate)
 			.addSelectionListener(this);
-		this._listening = true;
+		this._selectionListening = true;
 	},
-	_listening : false,
+	_selectionListening : false,
  
 	removeSelectionListener : function() 
 	{
-		if (!this._listening) return;
+		if (!this._selectionListening) return;
 		this.editor
 			.selection
 			.QueryInterface(Components.interfaces.nsISelectionPrivate)
 			.removeSelectionListener(this);
-		this._listening = false;
+		this._selectionListening = false;
 	},
   
 /* initialize */ 
@@ -487,8 +514,8 @@ var RulerBar = {
 		this.frame.addEventListener('scroll', this, false);
 
 		this.addPrefListener();
-	
-		this._wrapLength = this.getPref('mailnews.wraplength'); 
+
+		this._wrapLength = this.getPref('mailnews.wraplength');
 		this.cursor.hidden = !(this.physical = this.getPref('extensions.rulerbar.physicalPositioning'));
 		this.tabWidth = this.getPref('extensions.rulerbar.tabWidth');
 		this.nonAsciiWidth = this.getPref('extensions.rulerbar.nonAsciiWidth');
@@ -530,7 +557,7 @@ var RulerBar = {
 		this.removePrefListener();
 		this.removeSelectionListener();
 	},
-  
+ 
 	initRuler : function() 
 	{
 		this.updateRulerAppearance();
