@@ -38,6 +38,7 @@ var RulerBar = {
 	kBAR         : 'ruler-bar', 
 	kCURSOR      : 'ruler-cursor',
 	kWRAP_MARKER : 'ruler-wrap',
+	kWRAP_POPUP  : 'ruler-wrap-popup',
 	kSCALEBAR    : 'ruler-scalebar',
 	kRULER_CELL  : 'ruler-cell',
 	kWRAP_CELL   : 'wrap-cell',
@@ -167,6 +168,10 @@ var RulerBar = {
 	get wrapMarker() 
 	{
 		return document.getElementById(this.kWRAP_MARKER);
+	},
+	get wrapPopup() 
+	{
+		return document.getElementById(this.kWRAP_POPUP);
 	},
  
 	get marks() 
@@ -341,6 +346,7 @@ var RulerBar = {
 		if (!this.wrapMarker.hasAttribute('dragging'))
 			return;
 
+		this.wrapPopup.openPopup(this.wrapMarker, 'after_pointer', 0, 0, false, false);
 		this.updateWrapMarker(this.calculateWrapLength(aEvent));
 	},
 	calculateWrapLength : function(aEvent)
@@ -354,8 +360,13 @@ var RulerBar = {
 		if (!this.wrapMarker.hasAttribute('dragging'))
 			return;
 
+		this.wrapPopup.hidePopup();
 		this.wrapMarker.removeAttribute('dragging');
-		this.setPref('mailnews.wraplength', this.calculateWrapLength(aEvent));
+
+		var wrap = this.calculateWrapLength(aEvent);
+		this.updateWrapMarker(wrap);
+		if (wrap != this.wrapLength)
+			this.setPref('mailnews.wraplength', wrap);
 	},
  
 	onCharsetChange : function(aCharset) 

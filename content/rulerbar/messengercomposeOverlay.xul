@@ -53,6 +53,9 @@
 			<hbox id="ruler-wrap"
 				onmousedown="RulerBar.handleEvent(event);"/>
 		</stack>
+		<panel id="ruler-wrap-popup">
+			<label/>
+		</panel>
 	</hbox>
 </vbox>
 </overlay>
