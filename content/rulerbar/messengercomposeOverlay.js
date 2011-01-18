@@ -306,17 +306,12 @@ var RulerBar = {
 		line.removeChild(marker);
 		line.normalize();
 
-		try {
-			var windowUtils = doc.defaultView
-								.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-								.getInterface(Components.interfaces.nsIDOMWindowUtils);
-			if (windowUtils.sendMouseEvent) {
-				windowUtils.sendMouseEvent('mousedown', clientX, clientY + 1, 0, 1, 0, false);
-				windowUtils.sendMouseEvent('mouseup', clientX, clientY + 1, 0, 1, 0, false);
-			}
-		}
-		catch(e) {
-			// on Gecko 1.8, sendMouseEvent is not available.
+		var windowUtils = doc.defaultView
+							.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+							.getInterface(Components.interfaces.nsIDOMWindowUtils);
+		if (windowUtils.sendMouseEvent) {
+			windowUtils.sendMouseEvent('mousedown', clientX, clientY + 1, 0, 1, 0, false);
+			windowUtils.sendMouseEvent('mouseup', clientX, clientY + 1, 0, 1, 0, false);
 		}
 	},
  

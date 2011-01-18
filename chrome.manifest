@@ -4,9 +4,5 @@ overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome:
 
 skin	rulerbar	classic/1.0	jar:chrome/rulerbar.jar!/skin/classic/rulerbar/
 
-override chrome://rulerbar/skin/rulerbar.css	chrome://rulerbar/skin/rulerbar-border.css
-override chrome://rulerbar/skin/rulerbar.css	chrome://rulerbar/skin/rulerbar-noborder.css	appversion>=3.0
-override chrome://rulerbar/skin/rulerbar.css	chrome://rulerbar/skin/rulerbar-noborder.css	os=Darwin
-
 locale	rulerbar	en-US	jar:chrome/rulerbar.jar!/locale/en-US/rulerbar/
 locale	rulerbar	ja	jar:chrome/rulerbar.jar!/locale/ja/rulerbar/
