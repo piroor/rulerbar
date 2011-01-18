@@ -148,7 +148,7 @@ var RulerBar = {
 	{
 		return document.getElementById(this.kSCALEBAR);
 	},
-	
+ 
 	get cursor() 
 	{
 		return document.getElementById(this.kCURSOR);
@@ -159,7 +159,7 @@ var RulerBar = {
 		var nodes = document.getElementsByAttribute(this.kCURRENT, 'true');
 		return nodes && nodes.length ? nodes[0] : null ;
 	},
-	get wrapCell() 
+	get wrapCell()
 	{
 		var nodes = document.getElementsByAttribute(this.kWRAP_CELL, 'true');
 		return nodes && nodes.length ? nodes[0] : null ;
@@ -169,7 +169,7 @@ var RulerBar = {
 	{
 		return document.getElementById(this.kWRAP_MARKER);
 	},
-	get wrapPopup() 
+	get wrapPopup()
 	{
 		return document.getElementById(this.kWRAP_POPUP);
 	},
@@ -183,7 +183,7 @@ var RulerBar = {
 	{
 		return document.getElementById('content-frame');
 	},
-	
+ 
 	get editor() 
 	{
 		return GetCurrentEditor();
@@ -193,12 +193,14 @@ var RulerBar = {
 	{
 		return this.frame.contentDocument.body;
 	},
-  
+ 
 	get calculator() 
 	{
 		return document.getElementById('rulerbar-calculator-frame');
 	},
- 
+  
+/* utilities */ 
+	
 	evaluateXPath : function(aExpression, aContext, aResultType) 
 	{
 		return (aContext.ownerDocument || aContext || document).evaluate(
@@ -218,6 +220,24 @@ var RulerBar = {
 	getBoxObjectFor : function(aNode) 
 	{
 		return window['piro.sakura.ne.jp'].boxObject.getBoxObjectFor(aNode);
+	},
+ 
+	calculateWrapLength : function(aEvent) 
+	{
+		var unit = this.wrapCell.boxObject.width || 1;
+		return Math.ceil((aEvent.screenX - this.scaleBar.boxObject.screenX) / unit);
+	},
+ 
+	setWrapLengthToCell : function(aCell) 
+	{
+		while (aCell)
+		{
+			if (aCell.nodeType == Node.ELEMENT_NODE && aCell.hasAttribute(this.kRULER_CELL))
+				break;
+			aCell = aCell.parentNode;
+		}
+		if (aCell)
+			this.setPref('mailnews.wraplength', parseInt(aCell.getAttribute('count')));
 	},
   
 	handleEvent : function(aEvent) 
@@ -286,7 +306,7 @@ var RulerBar = {
 	lastClickedScreenX : -1,
 	lastClickedScreenY : -1,
  
-	onClickOnBar : function(aEvent)
+	onClickOnBar : function(aEvent) 
 	{
 		var selection = this.editor.selection;
 		if (!selection.rangeCount) return;
@@ -315,28 +335,17 @@ var RulerBar = {
 		}
 	},
  
-	onDblClickOnBar : function(aEvent)
+	onDblClickOnBar : function(aEvent) 
 	{
 		this.setWrapLengthToCell(aEvent.originalTarget);
 	},
-	setWrapLengthToCell : function(aCell)
-	{
-		while (aCell)
-		{
-			if (aCell.nodeType == Node.ELEMENT_NODE && aCell.hasAttribute(this.kRULER_CELL))
-				break;
-			aCell = aCell.parentNode;
-		}
-		if (aCell)
-			this.setPref('mailnews.wraplength', parseInt(aCell.getAttribute('count')));
-	},
  
-	onWrapMarkerDragStart : function(aEvent)
+	onWrapMarkerDragStart : function(aEvent) 
 	{
 		this.wrapMarker.setAttribute('dragging', true);
 	},
  
-	onWrapMarkerDragging : function(aEvent)
+	onWrapMarkerDragging : function(aEvent) 
 	{
 		if (!this.wrapMarker.hasAttribute('dragging'))
 			return;
@@ -346,13 +355,8 @@ var RulerBar = {
 		this.wrapPopup.openPopup(this.wrapMarker, 'after_pointer', 0, 0, false, false);
 		this.updateWrapMarker(wrap);
 	},
-	calculateWrapLength : function(aEvent)
-	{
-		var unit = this.wrapCell.boxObject.width || 1;
-		return Math.ceil((aEvent.screenX - this.scaleBar.boxObject.screenX) / unit);
-	},
  
-	onWrapMarkerDragEnd : function(aEvent)
+	onWrapMarkerDragEnd : function(aEvent) 
 	{
 		if (!this.wrapMarker.hasAttribute('dragging'))
 			return;
@@ -444,8 +448,8 @@ var RulerBar = {
 		this.frame.addEventListener('scroll', this, false);
 
 		this.addPrefListener();
-		
-		this._wrapLength = this.getPref('mailnews.wraplength');
+	
+		this._wrapLength = this.getPref('mailnews.wraplength'); 
 		this.cursor.hidden = !(this.physical = this.getPref('extensions.rulerbar.physicalPositioning'));
 		this.tabWidth = this.getPref('extensions.rulerbar.tabWidth');
 		this.nonAsciiWidth = this.getPref('extensions.rulerbar.nonAsciiWidth');
@@ -587,7 +591,7 @@ var RulerBar = {
 		rulerBox.appendChild(fragment);
 	},
  
-	updateWrapMarker : function(aWrap)
+	updateWrapMarker : function(aWrap) 
 	{
 		if (!aWrap || aWrap < 0)
 			aWrap = this.wrapLength;
@@ -975,7 +979,7 @@ var RulerBar = {
 		}
 		return onTop ? this.kLINE_TOP : this.kLINE_END ;
 	},
-     
+      
 /* Prefs */ 
 	
 	get Prefs() 
