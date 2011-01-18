@@ -306,13 +306,7 @@ var RulerBar = {
 			cell = cell.parentNode;
 		}
 		if (cell)
-			this.setWrapLength(parseInt(cell.getAttribute('count')));
-	},
- 
-	updateWrapLength : function(aCount)
-	{
-		this.editor.document.body.style.width = count+'ch';
-		this.setPref('mailnews.wraplength', count);
+			this.setPref('mailnews.wraplength', parseInt(cell.getAttribute('count')));
 	},
  
 	onCharsetChange : function(aCharset) 
@@ -1026,6 +1020,7 @@ var RulerBar = {
 
 			case 'mailnews.wraplength':
 				this._wrapLength = value;
+				this.editor.document.body.style.width = count+'ch';
 				break;
 
 			case 'extensions.rulerbar.tabWidth':
