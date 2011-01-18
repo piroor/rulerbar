@@ -437,14 +437,20 @@ var RulerBar = {
 		}, 0, this, aReason);
 	},
  
-	addSelectionListener : function() 
+	initEditor : function() 
 	{
 		if (!this.editor) {
 			window.setTimeout(function(aSelf) {
-				aSelf.addSelectionListener();
+				aSelf.initEditor();
 			}, 10, this);
 			return;
 		}
+		this.editor.document.body.style.width = this.wrapLength+'ch'; // initialize wrap length
+		this.addSelectionListener();
+	},
+ 
+	addSelectionListener : function() 
+	{
 		if (this._listening) return;
 		this.editor
 			.selection
@@ -506,7 +512,7 @@ var RulerBar = {
 	{
 		this.initRuler();
 		window.setTimeout(function(aSelf) {
-			aSelf.addSelectionListener();
+			aSelf.initEditor();
 			aSelf.contentBody.addEventListener('DOMAttrModified', aSelf, true);
 //			aSelf.contentBody.addEventListener('DOMNodeInserted', aSelf, true);
 		}, 0, this);
