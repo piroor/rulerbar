@@ -35,12 +35,13 @@
  
 var RulerBar = { 
 	
-	kBAR     : 'ruler-bar', 
-	kCURSOR  : 'ruler-cursor',
-	kCURRENT : 'current',
-
-	kSCALEBAR   : 'ruler-scalebar',
-	kRULER_CELL : 'ruler-cell',
+	kBAR         : 'ruler-bar', 
+	kCURSOR      : 'ruler-cursor',
+	kWRAP_MARKER : 'ruler-wrap',
+	kSCALEBAR    : 'ruler-scalebar',
+	kRULER_CELL  : 'ruler-cell',
+	kWRAP_CELL   : 'wrap-cell',
+	kCURRENT     : 'current',
 
 	kRULER_BAR_DRAG_TYPE : 'application/x-rulerbar-ruler',
 
@@ -157,6 +158,16 @@ var RulerBar = {
 		var nodes = document.getElementsByAttribute(this.kCURRENT, 'true');
 		return nodes && nodes.length ? nodes[0] : null ;
 	},
+	get wrapCell() 
+	{
+		var nodes = document.getElementsByAttribute(this.kWRAP_CELL, 'true');
+		return nodes && nodes.length ? nodes[0] : null ;
+	},
+ 
+	get wrapMarker() 
+	{
+		return document.getElementById(this.kWRAP_MARKER);
+	},
  
 	get marks() 
 	{
@@ -235,12 +246,16 @@ var RulerBar = {
 			case 'dblclick':
 				return this.onDblClickOnBar(aEvent);
 
-			case 'dragstart':
-				return this.onScaleDragStart(aEvent);
 
-			case 'dragenter':
-			case 'drop':
-				return this.onScaleDragging(aEvent);
+			case 'mousedown':
+				return this.onWrapMarkerDragStart(aEvent);
+
+			case 'mousemove':
+				return this.onWrapMarkerDragging(aEvent);
+
+			case 'mouseup':
+				return this.onWrapMarkerDragEnd(aEvent);
+
 
 			case 'DOMAttrModified':
 				if (
@@ -316,26 +331,31 @@ var RulerBar = {
 			this.setPref('mailnews.wraplength', parseInt(aCell.getAttribute('count')));
 	},
  
-	onScaleDragStart : function(aEvent)
+	onWrapMarkerDragStart : function(aEvent)
 	{
-		var dt = aEvent.dataTransfer;
-		if (!dt)
-			return;
-
-		dt.setData(this.kRULER_BAR_DRAG_TYPE, aEvent.clientX);
-		dt.effectAllowed = 'move';
-		dt.mozCursor = 'default';
+		this.wrapMarker.setAttribute('dragging', true);
 	},
  
-	onScaleDragging : function(aEvent)
+	onWrapMarkerDragging : function(aEvent)
 	{
-		var dt = aEvent.dataTransfer;
-		if (!dt || !dt.types.contains(this.kRULER_BAR_DRAG_TYPE))
+		if (!this.wrapMarker.hasAttribute('dragging'))
 			return;
 
-		this.setWrapLengthToCell(aEvent.originalTarget);
+		this.updateWrapMarker(this.calculateWrapLength(aEvent));
+	},
+	calculateWrapLength : function(aEvent)
+	{
+		var unit = this.wrapCell.boxObject.width || 1;
+		return Math.ceil((aEvent.screenX - this.scaleBar.boxObject.screenX) / unit);
+	},
+ 
+	onWrapMarkerDragEnd : function(aEvent)
+	{
+		if (!this.wrapMarker.hasAttribute('dragging'))
+			return;
 
-		aEvent.preventDefault();
+		this.wrapMarker.removeAttribute('dragging');
+		this.setPref('mailnews.wraplength', this.calculateWrapLength(aEvent));
 	},
  
 	onCharsetChange : function(aCharset) 
@@ -495,6 +515,7 @@ var RulerBar = {
 			aSelf.calculator.style.visibility = 'hidden';
 			aSelf.updateOffset();
 			aSelf.buildRulerMarks();
+			aSelf.updateWrapMarker();
 			aSelf.updateCursor();
 			aSelf._updateRulerAppearanceTimer = null;
 		}, 0, this);
@@ -529,20 +550,17 @@ var RulerBar = {
 
 		var unit, level;
 		var fragment = document.createDocumentFragment();
-		for (var i = 0; i < maxCount; i++)
+		for (let i = 0; i < maxCount; i++)
 		{
 			level = i % counterCol == 0 ? 3 :
 					i % 10 == 0 ? 2 :
 					i % minCol == 0 ? 1 :
 					0 ;
 			unit = document.createElement('vbox');
-			unit.setAttribute(
-				'class',
-				this.kRULER_CELL+
-				' level'+level+
-				((wrapLength && i == wrapLength) ? ' wrapLength' : '')
-			);
+			unit.setAttribute('class', this.kRULER_CELL+' level'+level);
 			unit.setAttribute(this.kRULER_CELL, true);
+			if (wrapLength && i == wrapLength)
+				unit.setAttribute(this.kWRAP_CELL, true);
 			unit.setAttribute('style', 'width:'+size+'px');
 			unit.setAttribute('count', i);
 			unit.setAttribute('tooltiptext', i);
@@ -559,6 +577,19 @@ var RulerBar = {
 			}
 		}
 		rulerBox.appendChild(fragment);
+	},
+ 
+	updateWrapMarker : function(aWrap)
+	{
+		if (!aWrap || aWrap < 0)
+			aWrap = this.wrapLength;
+
+		var position = aWrap == this.wrapLength ?
+						this.wrapCell.boxObject.screenX - this.scaleBar.boxObject.screenX :
+						aWrap * this.wrapCell.boxObject.width;
+
+		this.wrapMarker.style.marginLeft = (position + this.offset)+'px';
+		this.wrapMarker.setAttribute('tooltiptext', aWrap);
 	},
  
 	updateOffset : function() 

@@ -73,7 +73,8 @@
 	margin-bottom: 0.5em;
 }
 
-.ruler-cell.wrapLength {
+.ruler-cell[wrap-cell="true"],
+#ruler-wrap {
 	height: 0.8em;
 	margin-bottom: 0.2em;
 	opacity: 0.75;

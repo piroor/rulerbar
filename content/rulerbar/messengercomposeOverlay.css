@@ -46,7 +46,19 @@
 	padding: 0;
 }
 
-#ruler-cursor {
+#ruler-cursor,
+#ruler-wrap {
 	position: relative;
+	width: 5px;
+	margin-right: 9999px; /* this is to shrink these element to their width */
 }
+
+#ruler-wrap {
+	cursor: ew-resize;
+}
+
+#ruler-wrap:not([dragging="true"]) {
+	opacity: 0;
+}
+
 
