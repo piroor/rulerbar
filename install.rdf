@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="rulerbar@piro.sakura.ne.jp"
                    em:name="Ruler Bar"
-                   em:version="0.4.2011011801"
+                   em:version="0.4.2011011901"
                    em:description="Shows a ruler in the mail composition window."
                    em:creator="SHIMODA Hiroshi"
                    em:optionsURL="chrome://rulerbar/content/config.xul"
@@ -24,7 +24,7 @@
                        em:creator="SHIMODA Hiroshi"/>
     </em:localized>
     <em:localized>
-      <RDF:Description em:locale="ja-JP"
+      <RDF:Description em:locale="ja"
                        em:name="ルーラーバー (Ruler Bar)"
                        em:description="メール作成ウィンドウにルーラーを表示します。"
                        em:homepageURL="http://piro.sakura.ne.jp/xul/_rulerbar.html"
