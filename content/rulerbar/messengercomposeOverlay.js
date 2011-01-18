@@ -341,8 +341,10 @@ var RulerBar = {
 		if (!this.wrapMarker.hasAttribute('dragging'))
 			return;
 
+		var wrap = this.calculateWrapLength(aEvent);
+		this.wrapPopup.firstChild.setAttribute('value', wrap);
 		this.wrapPopup.openPopup(this.wrapMarker, 'after_pointer', 0, 0, false, false);
-		this.updateWrapMarker(this.calculateWrapLength(aEvent));
+		this.updateWrapMarker(wrap);
 	},
 	calculateWrapLength : function(aEvent)
 	{
