@@ -282,7 +282,9 @@ var RulerBar = {
 						 - this.getBoxObjectFor(doc.body).screenY
 						  - doc.defaultView.scrollY;
 
-		marker.parentNode.removeChild(marker);
+		var line = marker.parentNode;
+		line.removeChild(marker);
+		line.normalize();
 
 		try {
 			var windowUtils = doc.defaultView
