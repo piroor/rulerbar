@@ -14,7 +14,7 @@
  * The Original Code is "Ruler Bar".
  *
  * The Initial Developer of the Original Code is ClearCode Inc.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2008-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): SHIMODA Hiroshi <piro@p.club.ne.jp>
@@ -35,14 +35,12 @@
  
 var RulerBar = { 
 	
-	kBAR    : 'ruler-bar', 
-	kCURSOR : 'current',
+	kBAR     : 'ruler-bar', 
+	kCURSOR  : 'ruler-cursor',
+	kCURRENT : 'current',
 
 	kSCALEBAR   : 'ruler-scalebar',
 	kRULER_CELL : 'ruler-cell',
-
-	kCURSORBAR            : 'ruler-cursorbar',
-	kCURSORBAR_POSITIONER : 'ruler-cursorbar-positioner',
 
 	kRULER_BAR_DRAG_TYPE : 'application/x-rulerbar-ruler',
 
@@ -151,23 +149,18 @@ var RulerBar = {
 	
 	get cursor() 
 	{
-		var nodes = document.getElementsByAttribute(this.kCURSOR, 'true');
+		return document.getElementById(this.kCURSOR);
+	},
+ 
+	get currentCell() 
+	{
+		var nodes = document.getElementsByAttribute(this.kCURRENT, 'true');
 		return nodes && nodes.length ? nodes[0] : null ;
 	},
  
 	get marks() 
 	{
 		return Array.slice(document.getElementsByAttribute(this.kRULER_CELL, 'true'));
-	},
-  
-	get cursorBar() 
-	{
-		return document.getElementById(this.kCURSORBAR);
-	},
- 
-	get cursorPositioner() 
-	{
-		return document.getElementById(this.kCURSORBAR_POSITIONER);
 	},
  
 	get frame() 
@@ -324,6 +317,9 @@ var RulerBar = {
 	onScaleDragStart : function(aEvent)
 	{
 		var dt = aEvent.dataTransfer;
+		if (!dt)
+			return;
+
 		dt.setData(this.kRULER_BAR_DRAG_TYPE, aEvent.clientX);
 		dt.effectAllowed = 'move';
 		dt.mozCursor = 'default';
@@ -332,7 +328,7 @@ var RulerBar = {
 	onScaleDragging : function(aEvent)
 	{
 		var dt = aEvent.dataTransfer;
-		if (!dt.types.contains(this.kRULER_BAR_DRAG_TYPE))
+		if (!dt || !dt.types.contains(this.kRULER_BAR_DRAG_TYPE))
 			return;
 
 		this.setWrapLengthToCell(aEvent.originalTarget);
@@ -418,15 +414,17 @@ var RulerBar = {
 		this.frame.addEventListener('scroll', this, false);
 
 		this.addPrefListener();
-		this.observe(null, 'nsPref:changed', 'mailnews.wraplength');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.tabWidth');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.nonAsciiWidth');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.shouldRoop');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.maxCount');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level3');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.column.level1');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.scale');
-		this.observe(null, 'nsPref:changed', 'extensions.rulerbar.physicalPositioning');
+		
+		this._wrapLength = this.getPref('mailnews.wraplength');
+		this.cursor.hidden = !(this.physical = this.getPref('extensions.rulerbar.physicalPositioning'));
+		this.tabWidth = this.getPref('extensions.rulerbar.tabWidth');
+		this.nonAsciiWidth = this.getPref('extensions.rulerbar.nonAsciiWidth');
+		this.shouldRoop = this.getPref('extensions.rulerbar.shouldRoop');
+		this.maxCount = this.getPref('extensions.rulerbar.maxCount');
+		this.columnLevel3 = this.getPref('extensions.rulerbar.column.level3');
+		this.columnLevel1 = this.getPref('extensions.rulerbar.column.level1');
+		this.scale = this.getPref('extensions.rulerbar.scale');
+		this.initRuler();
 	},
 	
 	overrideFunctions : function() 
@@ -578,21 +576,21 @@ var RulerBar = {
 
 		try {
 			var lastPos = 0;
-			var cursor = this.cursor;
+			var current = this.currentCell;
 			var marks = this.marks;
-			if (cursor) {
-				lastPos = marks.indexOf(cursor);
-				cursor.removeAttribute(this.kCURSOR);
+			if (current) {
+				lastPos = marks.indexOf(current);
+				current.removeAttribute(this.kCURRENT);
 			}
 
 			var line = this.getCurrentLine(this.editor.selection);
 			if ('physicalPosition' in line) {
-				this.cursorPositioner.setAttribute('style', 'width:'+line.physicalPosition+'px');
+				this.cursor.style.marginLeft = (this.offset + line.physicalPosition)+'px';
 			}
 			else {
 				var pos = (this.lastPosition == this.kLINE_TOP) ? 0 : line.leftCount ;
 				if (pos in marks)
-					marks[pos].setAttribute(this.kCURSOR, true);
+					marks[pos].setAttribute(this.kCURRENT, true);
 			}
 		}
 		catch(e) {
@@ -1084,7 +1082,7 @@ var RulerBar = {
 
 			case 'extensions.rulerbar.physicalPositioning':
 				this.physical = value;
-				this.cursorBar.hidden = !value;
+				this.cursor.hidden = !value;
 				break;
 		}
 		this.initRuler();

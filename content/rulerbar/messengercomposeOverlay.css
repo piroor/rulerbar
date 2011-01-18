@@ -14,7 +14,7 @@
  * The Original Code is "Ruler Bar".
  *
  * The Initial Developer of the Original Code is ClearCode Inc.
- * Portions created by the Initial Developer are Copyright (C) 2008-2009
+ * Portions created by the Initial Developer are Copyright (C) 2008-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): SHIMODA Hiroshi <piro@p.club.ne.jp>
@@ -45,3 +45,8 @@
 	margin: 0;
 	padding: 0;
 }
+
+#ruler-cursor {
+	position: relative;
+}
+
