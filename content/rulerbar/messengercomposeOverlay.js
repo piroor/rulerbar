@@ -472,7 +472,8 @@ var RulerBar = {
 			}, 10, this);
 			return;
 		}
-		this.editor.document.body.style.width = this.wrapLength+'ch'; // initialize wrap length
+		var wrapLength = this.wrapLength;
+		this.editor.document.body.style.width = wrapLength > 0 ? wrapLength+'ch' : '' ;
 		this.addSelectionListener();
 	},
  
@@ -662,12 +663,17 @@ var RulerBar = {
 		if (!aWrap || aWrap < 0)
 			aWrap = this.wrapLength;
 
-		var position = aWrap == this.wrapLength ?
+		var position = !aWrap ?
+						0 :
+					aWrap == this.wrapLength ?
 						this.wrapCell.boxObject.screenX - this.scaleBar.boxObject.screenX :
 						aWrap * this.wrapCell.boxObject.width;
 
 		this.wrapMarker.style.marginLeft = (position + this.offset)+'px';
-		this.wrapMarker.setAttribute('tooltiptext', aWrap);
+		if (position)
+			this.wrapMarker.setAttribute('tooltiptext', aWrap);
+		else
+			this.wrapMarker.removeAttribute('tooltiptext');
 	},
  
 	updateOffset : function() 
