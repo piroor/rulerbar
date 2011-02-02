@@ -99,6 +99,11 @@ var RulerBar = {
 		return size * (scale / 100);
 	},
  
+	get needUpdated() 
+	{
+		return (window.getComputedStyle(this.bar, '').fontSize != this.frame.contentWindow.getComputedStyle(this.contentBody, '').fontSize);
+	},
+ 
 	get offset() 
 	{
 		var w = this.frame.contentWindow;
@@ -294,6 +299,11 @@ var RulerBar = {
 					) {
 					this.updateRulerAppearanceWithDelay();
 				}
+				break;
+
+			case 'load':
+				if (this.needUpdated)
+					this.updateRulerAppearance(); // force update with the correct font-size
 				break;
 
 			case 'compose-window-init':
@@ -513,6 +523,7 @@ var RulerBar = {
 		this.frame.addEventListener('click', this, false);
 		this.frame.addEventListener('dragover', this, false);
 		this.frame.addEventListener('scroll', this, false);
+		this.frame.addEventListener('load', this, true);
 
 		this.addPrefListener();
 
@@ -555,6 +566,7 @@ var RulerBar = {
 		this.frame.removeEventListener('click', this, false);
 		this.frame.removeEventListener('dragover', this, false);
 		this.frame.removeEventListener('scroll', this, false);
+		this.frame.removeEventListener('load', this, true);
 		this.removePrefListener();
 		this.removeSelectionListener();
 	},
