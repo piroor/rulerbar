@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="rulerbar@piro.sakura.ne.jp"
                    em:name="Ruler Bar"
-                   em:version="0.4.2011020201"
+                   em:version="0.4.2011020301"
                    em:description="Shows a ruler in the mail composition window."
                    em:creator="SHIMODA Hiroshi"
                    em:optionsURL="chrome://rulerbar/content/config.xul"
