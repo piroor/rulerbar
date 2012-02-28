@@ -35,6 +35,7 @@
 
 #ruler-bar > * {
 	font-size: 90%;
+	box-align: start;
 	-moz-box-align: start;
 }
 
