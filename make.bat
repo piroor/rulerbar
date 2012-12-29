@@ -1,3 +1,3 @@
 copy buildscript\makexpi.sh .\
-bash makexpi.sh rulerbar version=0
+bash makexpi.sh -n rulerbar -o
 del makexpi.sh

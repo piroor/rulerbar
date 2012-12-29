@@ -1,5 +1,5 @@
 #!/bin/sh
 
 cp buildscript/makexpi.sh ./
-./makexpi.sh rulerbar version=0
+./makexpi.sh -n rulerbar -o
 rm ./makexpi.sh
