@@ -1,5 +1,7 @@
 # History
 
+ - master/HEAD
+   * Modified: "jar" archive is no longer included.
  - 0.4.2011020301
    * Fixed: The ruler was shown based on wrong font-size if they proportional and monospace fonts have different font-size.
  - 0.4.2011020201
