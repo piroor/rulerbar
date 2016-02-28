@@ -14,7 +14,7 @@
  * The Original Code is "Ruler Bar".
  *
  * The Initial Developer of the Original Code is ClearCode Inc.
- * Portions created by the Initial Developer are Copyright (C) 2008-2011
+ * Portions created by the Initial Developer are Copyright (C) 2008-2016
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -443,7 +443,7 @@ var RulerBar = {
 	onCharsetChange : function(aCharset) 
 	{
 		if (!aCharset) {
-			aCharset = gCurrentMailSendCharset || this.frame.contentDocument.characterSet;
+			aCharset = this.frame.contentDocument.characterSet;
 		}
 		if (!aCharset) {
 			return;
