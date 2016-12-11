@@ -186,7 +186,7 @@ var RulerBar = {
  
 	get marks() 
 	{
-		return Array.slice(document.getElementsByAttribute(this.kRULER_CELL, 'true'));
+		return [...document.getElementsByAttribute(this.kRULER_CELL, 'true')];
 	},
  
 	get frame() 
@@ -691,9 +691,10 @@ var RulerBar = {
 	updateOffset : function() 
 	{
 		var offset = this.offset;
-		Array.slice(this.bar.childNodes).forEach(function(aNode) {
-			aNode.style.marginLeft = offset+'px';
-		}, this);
+		for (let node of this.bar.childNodes)
+		{
+			node.style.marginLeft = offset+'px';
+		}
 	},
   
 	updateCursor : function(aReason) 
