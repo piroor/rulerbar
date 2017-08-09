@@ -1140,9 +1140,9 @@ var RulerBar = {
 		var observer = this;
 		var domains = ('domains' in observer) ? observer.domains : [observer.domain] ;
 		try {
-			var pbi = this.Prefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+			var pb = this.Prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 			for (var i = 0; i < domains.length; i++)
-				pbi.addObserver(domains[i], observer, false);
+				pb.addObserver(domains[i], observer, false);
 		}
 		catch(e) {
 		}
@@ -1153,9 +1153,9 @@ var RulerBar = {
 		var observer = this;
 		var domains = ('domains' in observer) ? observer.domains : [observer.domain] ;
 		try {
-			var pbi = this.Prefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+			var pb = this.Prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 			for (var i = 0; i < domains.length; i++)
-				pbi.removeObserver(domains[i], observer, false);
+				pb.removeObserver(domains[i], observer, false);
 		}
 		catch(e) {
 		}
