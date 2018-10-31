@@ -137,9 +137,9 @@ var RulerBar = {
 	{
 		var color = this.frame.contentWindow.getComputedStyle(this.contentBody, '').backgroundColor;
 		if (color == 'transparent')
-			color = this.getPref('browser.display.use_system_colors') ?
+			color = this.prefs.getPref('browser.display.use_system_colors') ?
 				'-moz-Field' :
-				this.getPref('browser.display.background_color');
+				this.prefs.getPref('browser.display.background_color');
 		return color;
 	},
   
@@ -247,7 +247,7 @@ var RulerBar = {
 			aCell = aCell.parentNode;
 		}
 		if (aCell)
-			this.setPref('mailnews.wraplength', parseInt(aCell.getAttribute('count')));
+			this.prefs.setPref('mailnews.wraplength', parseInt(aCell.getAttribute('count')));
 	},
   
 	handleEvent : function(aEvent) 
@@ -389,7 +389,7 @@ var RulerBar = {
 		var wrap = this.calculateWrapLength(aEvent);
 		this.updateWrapMarker(wrap);
 		if (wrap != this.wrapLength)
-			this.setPref('mailnews.wraplength', wrap);
+			this.prefs.setPref('mailnews.wraplength', wrap);
 	},
  
 	activateWrapMarker : function() 
@@ -525,7 +525,8 @@ var RulerBar = {
 		this.frame.addEventListener('scroll', this, false);
 		this.frame.addEventListener('load', this, true);
 
-		this.addPrefListener();
+		this.prefs = Components.utils.import('resource://rulerber-modules/prefs.js', {}).prefs;
+		this.prefs.addPrefListener(this);
 
 		this._wrapLength = this.getPref('mailnews.wraplength');
 		this.cursor.hidden = !(this.physical = this.getPref('extensions.rulerbar.physicalPositioning'));
@@ -567,7 +568,7 @@ var RulerBar = {
 		this.frame.removeEventListener('dragover', this, false);
 		this.frame.removeEventListener('scroll', this, false);
 		this.frame.removeEventListener('load', this, true);
-		this.removePrefListener();
+		this.prefs.removePrefListener(this);
 		this.removeSelectionListener();
 	},
  
@@ -973,7 +974,7 @@ var RulerBar = {
 			}
 			aLine.left = newLeft;
 			aLine.leftCount = leftCount;
-			if (aLine.leftCount % 2 != this.getLogicalLength(aLine.left) % 2) { // ëSäpï∂éöÇ≈ê‹ÇËï‘Ç≥ÇÍÇΩèÍçá
+			if (aLine.leftCount % 2 != this.getLogicalLength(aLine.left) % 2) {
 				if (aLine.leftCount == wrapLength) {
 					aLine.leftCount = wrapLength-1;
 				}
@@ -1064,108 +1065,12 @@ var RulerBar = {
 		}
 		return onTop ? this.kLINE_TOP : this.kLINE_END ;
 	},
-      
-/* Prefs */ 
-	
-	get Prefs() 
-	{
-		if (!this._Prefs) {
-			this._Prefs = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefBranch);
-		}
-		return this._Prefs;
-	},
-	_Prefs : null,
- 
-	getPref : function(aPrefstring) 
-	{
-		try {
-			switch (this.Prefs.getPrefType(aPrefstring))
-			{
-				case this.Prefs.PREF_STRING:
-					return decodeURIComponent(escape(this.Prefs.getCharPref(aPrefstring)));
-					break;
-				case this.Prefs.PREF_INT:
-					return this.Prefs.getIntPref(aPrefstring);
-					break;
-				default:
-					return this.Prefs.getBoolPref(aPrefstring);
-					break;
-			}
-		}
-		catch(e) {
-		}
 
-		return null;
-	},
- 
-	setPref : function(aPrefstring, aNewValue, aPrefObj) 
-	{
-		var pref = aPrefObj || this.Prefs ;
-		var type;
-		try {
-			type = typeof aNewValue;
-		}
-		catch(e) {
-			type = null;
-		}
-
-		switch (type)
-		{
-			case 'string':
-				pref.setCharPref(aPrefstring, unescape(encodeURIComponent(aNewValue)));
-				break;
-			case 'number':
-				pref.setIntPref(aPrefstring, parseInt(aNewValue));
-				break;
-			default:
-				pref.setBoolPref(aPrefstring, aNewValue);
-				break;
-		}
-		return true;
-	},
- 
-	clearPref : function(aPrefstring) 
-	{
-		try {
-			this.Prefs.clearUserPref(aPrefstring);
-		}
-		catch(e) {
-		}
-
-		return;
-	},
- 
-	addPrefListener : function() 
-	{
-		var observer = this;
-		var domains = ('domains' in observer) ? observer.domains : [observer.domain] ;
-		try {
-			var pb = this.Prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
-			for (var i = 0; i < domains.length; i++)
-				pb.addObserver(domains[i], observer, false);
-		}
-		catch(e) {
-		}
-	},
- 
-	removePrefListener : function() 
-	{
-		var observer = this;
-		var domains = ('domains' in observer) ? observer.domains : [observer.domain] ;
-		try {
-			var pb = this.Prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
-			for (var i = 0; i < domains.length; i++)
-				pb.removeObserver(domains[i], observer, false);
-		}
-		catch(e) {
-		}
-	},
- 
 	observe : function(aSubject, aTopic, aPrefName) 
 	{
 		if (aTopic != 'nsPref:changed') return;
 
-		var value = this.getPref(aPrefName);
+		var value = this.prefs.getPref(aPrefName);
 		switch (aPrefName)
 		{
 			default:
