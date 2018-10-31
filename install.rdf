@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="rulerbar@piro.sakura.ne.jp"
                    em:name="Ruler Bar"
-                   em:version="0.4.2011020301"
+                   em:version="0.4.2018103101"
                    em:description="Shows a ruler in the mail composition window."
                    em:creator="YUKI &quot;Piro&quot; Hiroshi"
                    em:optionsURL="chrome://rulerbar/content/config.xul"
@@ -36,8 +36,8 @@
     <em:targetApplication>
       <!-- Thunderbird -->
 	  <RDF:Description em:id="{3550f703-e582-4d05-9a08-453d09bdfdc6}"
-	                   em:minVersion="45.0"
-	                   em:maxVersion="45.*" />
+	                   em:minVersion="52.0"
+	                   em:maxVersion="60.*" />
 	</em:targetApplication>
   </RDF:Description>
 </RDF:RDF>
