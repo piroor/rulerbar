@@ -185,14 +185,10 @@ if (typeof window == 'undefined' ||
 			return parseInt(aStyle.getPropertyValue(aProperty).replace('px', ''));
 		},
 
-		Prefs : Cc['@mozilla.org/preferences;1']
-			.getService(Ci.nsIPrefBranch)
-			.QueryInterface(Ci.nsIPrefBranch2),
-
 		getZoom : function(aFrame)
 		{
 			try {
-				if (!this.Prefs.getBoolPref('browser.zoom.full'))
+				if (!Services.prefs.getBoolPref('browser.zoom.full'))
 					return 1;
 			}
 			catch(e) {

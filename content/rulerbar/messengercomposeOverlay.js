@@ -448,10 +448,10 @@ var RulerBar = {
 		if (!aCharset) {
 			return;
 		}
-		var docCharset = this.calculator.docShell
-				.QueryInterface(Components.interfaces.nsIDocCharset);
-		docCharset.charset = aCharset;
 		try {
+			var docCharset = this.calculator.docShell
+					.QueryInterface(Components.interfaces.nsIDocCharset);
+			docCharset.charset = aCharset;
 			var webNav = this.calculator.webNavigation;
 			var self = this;
 			this.calculator.addEventListener('DOMContentLoaded', function() {
@@ -525,18 +525,18 @@ var RulerBar = {
 		this.frame.addEventListener('scroll', this, false);
 		this.frame.addEventListener('load', this, true);
 
-		this.prefs = Components.utils.import('resource://rulerber-modules/prefs.js', {}).prefs;
+		this.prefs = Components.utils.import('resource://rulerbar-modules/prefs.js', {}).prefs;
 		this.prefs.addPrefListener(this);
 
-		this._wrapLength = this.getPref('mailnews.wraplength');
-		this.cursor.hidden = !(this.physical = this.getPref('extensions.rulerbar.physicalPositioning'));
-		this.tabWidth = this.getPref('extensions.rulerbar.tabWidth');
-		this.nonAsciiWidth = this.getPref('extensions.rulerbar.nonAsciiWidth');
-		this.shouldRoop = this.getPref('extensions.rulerbar.shouldRoop');
-		this.maxCount = this.getPref('extensions.rulerbar.maxCount');
-		this.columnLevel3 = this.getPref('extensions.rulerbar.column.level3');
-		this.columnLevel1 = this.getPref('extensions.rulerbar.column.level1');
-		this.scale = this.getPref('extensions.rulerbar.scale');
+		this._wrapLength = this.prefs.getPref('mailnews.wraplength');
+		this.cursor.hidden = !(this.physical = this.prefs.getPref('extensions.rulerbar.physicalPositioning'));
+		this.tabWidth = this.prefs.getPref('extensions.rulerbar.tabWidth');
+		this.nonAsciiWidth = this.prefs.getPref('extensions.rulerbar.nonAsciiWidth');
+		this.shouldRoop = this.prefs.getPref('extensions.rulerbar.shouldRoop');
+		this.maxCount = this.prefs.getPref('extensions.rulerbar.maxCount');
+		this.columnLevel3 = this.prefs.getPref('extensions.rulerbar.column.level3');
+		this.columnLevel1 = this.prefs.getPref('extensions.rulerbar.column.level1');
+		this.scale = this.prefs.getPref('extensions.rulerbar.scale');
 		this.initRuler();
 	},
 	
