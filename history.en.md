@@ -1,6 +1,8 @@
 # History
 
  - master/HEAD
+ - 0.5.2019041701
+   * Support Thunderbird 60.
    * Modified: "jar" archive is no longer included.
  - 0.4.2011020301
    * Fixed: The ruler was shown based on wrong font-size if they proportional and monospace fonts have different font-size.
