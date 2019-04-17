@@ -136,7 +136,9 @@ var RulerBar = {
 	get backgroundColor() 
 	{
 		var color = this.frame.contentWindow.getComputedStyle(this.contentBody, '').backgroundColor;
-		if (color == 'transparent')
+		if (color == 'transparent' ||
+		    /(rgb|hsl)a\(.+,\s*0\)/.test(color) ||
+		    /#(...0|......00)/.test(color))
 			color = this.prefs.getPref('browser.display.use_system_colors') ?
 				'-moz-Field' :
 				this.prefs.getPref('browser.display.background_color');
