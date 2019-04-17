@@ -34,6 +34,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY config.title "ルーラーの設定">
+<!ENTITY config.width "30em">
 <!ENTITY config.physicalPositioning  "カーソル位置を正確に表示する">
 <!ENTITY config.shouldRoop           "テキストメールでは指定文字数で折り返す">
 <!ENTITY config.column.level3.before "">

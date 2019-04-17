@@ -34,6 +34,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY config.title "Ruler Configuration">
+<!ENTITY config.width "30em">
 <!ENTITY config.physicalPositioning  "Calculate cursor position faithfully">
 <!ENTITY config.shouldRoop           "Wrap on plain text mail">
 <!ENTITY config.column.level3.before "Show counters on every">

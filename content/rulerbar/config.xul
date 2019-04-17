@@ -38,7 +38,8 @@
 <!DOCTYPE prefwindow SYSTEM "chrome://rulerbar/locale/rulerbar.dtd">
 <prefwindow id="rulerbar-config"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="&config.title;">
+	title="&config.title;"
+	style="min-width:&config.width;">
 
 <prefpane id="prefpane-general">
 	<preferences>
