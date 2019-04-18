@@ -1,6 +1,8 @@
 # History
 
  - master/HEAD
+ - 0.5.2019041801
+   * Fix inaccessible options dialog on non-Japanese locale.
  - 0.5.2019041701
    * Support Thunderbird 60.
    * Modified: "jar" archive is no longer included.
